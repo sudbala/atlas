@@ -4,21 +4,79 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:mapbox_gl/mapbox_gl.dart';
 
-class MainScreen extends StatelessWidget {
+class MainScreen extends StatefulWidget {
+  /// Instance vars for the MapBox map
+  static const String ACCESS_TOKEN =
+      'pk.eyJ1Ijoic3Vkb3dvb2RvIiwiYSI6ImNraWc4bjZraDA4aHAyeG9pNnJpM2kzdmMifQ'
+      '.97alUuajzxtaLCkz2ura4g';
+  static const String STYLE = 'mapbox://styles/sudowoodo/ckig8qtzi539p19pb08ricter';
+
+  static const TextStyle optionStyle = TextStyle(fontSize: 30, fontWeight: FontWeight.bold);
+  static const List<Widget> _widgetOptions = <Widget>[
+    Text(
+      'Index 0: Home',
+      style: optionStyle,
+    ),
+    Scaffold(
+        body: MapboxMap(
+          initialCameraPosition:
+          const CameraPosition(target: LatLng(38.897957, -77.036560),
+              zoom: 10
+          ),
+          accessToken: ACCESS_TOKEN,
+          styleString: STYLE,
+
+        ),
+    ),
+    Text(
+      'Index 2: School',
+      style: optionStyle,
+    ),
+  ];
+
+  @override
+  _MainScreenState createState() => _MainScreenState();
+}
+
+class _MainScreenState extends State<MainScreen> {
+  int _selectedIndex = 0;
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: MapboxMap(
-        initialCameraPosition:
-          const CameraPosition(target: LatLng(0.0, 0.0)
-        ),
-        accessToken: 'pk.eyJ1Ijoic3Vkb3dvb2RvIiwiYSI6ImNraWc4bjZraDA4aHAyeG9pNnJpM2kzdmMifQ.97alUuajzxtaLCkz2ura4g' ,
-        styleString: 'mapbox://styles/sudowoodo/ckig8qtzi539p19pb08ricter',
-        
-      )
+      appBar: AppBar(
+        title: const Text('Atlas'),
+      ),
+      body: Center(
+        child: MainScreen._widgetOptions.elementAt(_selectedIndex),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.map),
+            label: 'Map',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.school),
+            label: 'School',
+          ),
+        ],
+        currentIndex: _selectedIndex,
+        selectedItemColor: Colors.amber[800],
+        onTap: _onItemTapped,
+      ),
     );
   }
-
 }
 
 //import 'package:flutter/material.dart';

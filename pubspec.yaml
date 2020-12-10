@@ -30,6 +30,9 @@ dependencies:
   cupertino_icons: ^1.0.0
   animated_splash_screen: ^1.0.1+2
   mapbox_gl: ^0.9.0
+  firebase_core: ^0.4.0+9
+  firebase_auth: ^0.14.0+5
+  cloud_firestore: ^0.12.9+5
 
 
 dev_dependencies:
@@ -51,6 +54,7 @@ flutter:
   assets:
     - images/mountains.png
     - images/mountain.png
+    - images/landscape.jpg
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.

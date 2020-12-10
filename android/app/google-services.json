@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "287911607325",
+    "project_id": "atlas-8b3b8",
+    "storage_bucket": "atlas-8b3b8.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:287911607325:android:f7ff7bb3693e31d7fd5af4",
+        "android_client_info": {
+          "package_name": "com.atlas"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "287911607325-e121crp17mbhho7h2lfq53a2t14ts1hd.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.atlas",
+            "certificate_hash": "e02d1c8038bd652b2c0e360511d35157951bd0f1"
+          }
+        },
+        {
+          "client_id": "287911607325-km4a1vc25uta3j0j1nt02gci0us81pck.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDNA2DiR7qQwVy3ocG6MG85smk3ZYGPymo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "287911607325-km4a1vc25uta3j0j1nt02gci0us81pck.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

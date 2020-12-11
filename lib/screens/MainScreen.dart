@@ -1,5 +1,5 @@
-
-
+import 'package:atlas/screens/ExploreScreen.dart';
+import 'package:atlas/screens/ProfileScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:mapbox_gl/mapbox_gl.dart';
@@ -9,29 +9,39 @@ class MainScreen extends StatefulWidget {
   static const String ACCESS_TOKEN =
       'pk.eyJ1Ijoic3Vkb3dvb2RvIiwiYSI6ImNraWc4bjZraDA4aHAyeG9pNnJpM2kzdmMifQ'
       '.97alUuajzxtaLCkz2ura4g';
-  static const String STYLE = 'mapbox://styles/sudowoodo/ckig8qtzi539p19pb08ricter';
+  static const String STYLE =
+      'mapbox://styles/sudowoodo/ckig8qtzi539p19pb08ricter';
 
-  static const TextStyle optionStyle = TextStyle(fontSize: 30, fontWeight: FontWeight.bold);
-  static const List<Widget> _widgetOptions = <Widget>[
-    Text(
-      'Index 0: Home',
-      style: optionStyle,
+  static const TextStyle optionStyle =
+      TextStyle(fontSize: 30, fontWeight: FontWeight.bold);
+  static List<Widget> _widgetOptions = <Widget>[
+    Scaffold(
+      appBar: AppBar(
+        title: Text("Atlas"),
+        actions: <Widget>[
+          IconButton(
+            icon: Icon(Icons.rate_review_rounded),
+            onPressed: () {
+              // Fill out onPressed here.
+            },
+          )
+        ],
+      ),
+      body: Text(
+        'Index 0: Home',
+        style: optionStyle,
+      ),
     ),
     Scaffold(
-        body: MapboxMap(
-          initialCameraPosition:
-          const CameraPosition(target: LatLng(38.897957, -77.036560),
-              zoom: 10
-          ),
-          accessToken: ACCESS_TOKEN,
-          styleString: STYLE,
-
-        ),
+      body: MapboxMap(
+        initialCameraPosition: const CameraPosition(
+            target: LatLng(38.897957, -77.036560), zoom: 10),
+        accessToken: ACCESS_TOKEN,
+        styleString: STYLE,
+      ),
     ),
-    Text(
-      'Index 2: School',
-      style: optionStyle,
-    ),
+    ExploreScreen(),
+    ProfileScreen(),
   ];
 
   @override
@@ -50,13 +60,12 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Atlas'),
-      ),
       body: Center(
         child: MainScreen._widgetOptions.elementAt(_selectedIndex),
       ),
       bottomNavigationBar: BottomNavigationBar(
+        // Must set to fixed here if you don't want icons moving. I dont think we want icons moving
+        type: BottomNavigationBarType.fixed,
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
@@ -67,12 +76,19 @@ class _MainScreenState extends State<MainScreen> {
             label: 'Map',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.school),
-            label: 'School',
+            icon: Icon(Icons.explore_rounded),
+            label: 'Search',
           ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: 'Profile',
+          )
         ],
         currentIndex: _selectedIndex,
-        selectedItemColor: Colors.amber[800],
+        selectedItemColor: Colors.cyan[700],
+        unselectedItemColor: Colors.grey[500],
+        showSelectedLabels: false,
+        showUnselectedLabels: false,
         onTap: _onItemTapped,
       ),
     );
@@ -142,7 +158,6 @@ class _MainScreenState extends State<MainScreen> {
 //    );
 //  }
 //}
-
 
 //class MainScreen extends StatefulWidget {
 //  MainScreen({Key key, this.title}) : super(key: key);

@@ -20,27 +20,33 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-
     return MediaQuery(
       // Have to wrap in a media query so that the animated splash screen
       // understands how to fill up the space. Media queries return data about
       // the specific screen size and dimensions of the device.
       data: new MediaQueryData(),
       child: FutureBuilder(
-        future: _setMap(),
-        builder: (context, snapshot) {
-          return MaterialApp(
-            // Has a duration, image, and transition types to the next screen.
-            home: AnimatedSplashScreen(
-              duration: 2000,
-              splash: 'images/mountain.png',
-              nextScreen: LoginScreen(),
-              splashTransition: SplashTransition.fadeTransition,
-              pageTransitionType: PageTransitionType.bottomToTop,
-            ),
-          );
-        }
-      ),
+          future: _setMap(),
+          builder: (context, snapshot) {
+            return MaterialApp(
+              // Has a duration, image, and transition types to the next screen.
+
+              theme: ThemeData(
+                // Playing with themedata and colors here.
+
+                primarySwatch: Colors.blue,
+
+                primaryColor: Colors.cyan[800],
+              ),
+              home: AnimatedSplashScreen(
+                duration: 2000,
+                splash: 'images/mountain.png',
+                nextScreen: MainScreen(),
+                splashTransition: SplashTransition.fadeTransition,
+                pageTransitionType: PageTransitionType.bottomToTop,
+              ),
+            );
+          }),
     );
   }
 }

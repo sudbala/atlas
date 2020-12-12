@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'AtlasApp.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(AtlasApp());
 }
 

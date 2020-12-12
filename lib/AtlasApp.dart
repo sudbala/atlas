@@ -2,15 +2,26 @@
 
 import 'package:atlas/screens/SplashScreen.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 /// This class handles the beginning of the app. Will send us into the splash
 /// screen
 class AtlasApp extends StatelessWidget {
-  // Root of the application
+ final Future<FirebaseApp> _initialization = Firebase.initializeApp();
 
 
   @override
   Widget build(BuildContext context) {
+    return FutureBuilder(
+      future: _initialization,
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          print('Something went wrong with firebase initialization');
+          return Placeholder();
+        }
+        return SplashScreen();
+      },
+    );
     return SplashScreen();
   }
 }

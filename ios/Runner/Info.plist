@@ -14,6 +14,12 @@
 	<string>6.0</string>
 	<key>CFBundleName</key>
 	<string>atlas</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Allow access to photo library</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Allow access to camera to capture photos</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Allow access to microphone</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>

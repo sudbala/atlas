@@ -34,10 +34,21 @@ dependencies:
   firebase_auth: ^0.18.4+1
   google_sign_in: ^4.5.6
   cloud_firestore: ^0.14.4
+  firebase_storage: ^5.1.0
+  image_picker:
+    git:
+      url: https://github.com/cpboyd/plugins.git
+      ref: image_picker_workaround
+      path: packages/image_picker/image_picker
   shared_preferences: ^0.5.12+4
+  
 
-
+flutter_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "images.icon.JPG"
 dev_dependencies:
+  flutter_launcher_icons: "^0.8.0"
   flutter_test:
     sdk: flutter
 

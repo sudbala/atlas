@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 class ProfileButton extends StatefulWidget {
-  final bool myProfile;
-  ProfileButton(this.myProfile);
+  final int relationShipToProfile;
+
+  ProfileButton(this.relationShipToProfile);
+
   @override
   _ProfileButtonState createState() => _ProfileButtonState();
 }
@@ -27,7 +29,7 @@ class _ProfileButtonState extends State<ProfileButton> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.myProfile) {
+    if (widget.relationShipToProfile == 3) {
       return IconButton(
         icon: Icon(Icons.settings),
         onPressed: () => {
@@ -58,7 +60,18 @@ class _ProfileButtonState extends State<ProfileButton> {
         },
       );
     } else {
-      return ElevatedButton(onPressed: () => {}, child: Text("Add Friend"));
+      // This is not your profile page
+      String buttonText;
+      if (widget.relationShipToProfile == 2) {
+        buttonText = "Friends";
+      } else if (widget.relationShipToProfile == 1) {
+        buttonText = "Accept Friend";
+      } else {
+        buttonText = "Requested";
+      }
+
+      return ElevatedButton(
+          onPressed: () => {setState(() {})}, child: Text(buttonText));
     }
   }
 }
@@ -94,7 +107,8 @@ class _ProfileScreenState extends State<ProfileScreen>
     with SingleTickerProviderStateMixin {
   // A little bit of code to setup a tabController;
   TabController tController;
-
+  // Here we would call to the FireStore database to actually get information on the profile
+  final int relationShipToProfile = 2;
   // Example Check in's just to see what having a list as one of the tabs feels like.
   final List<String> checkInExample =
       List.generate(50, (index) => "Check In $index");
@@ -134,7 +148,7 @@ class _ProfileScreenState extends State<ProfileScreen>
               controller: tController,
               //labelColor: Colors.blue,
             ),
-            actions: <Widget>[ProfileButton(true)],
+            actions: <Widget>[ProfileButton(relationShipToProfile)],
           ),
 
           /*SliverPersistentHeader(

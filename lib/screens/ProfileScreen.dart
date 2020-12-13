@@ -12,6 +12,7 @@ class ProfileButton extends StatefulWidget {
 class _ProfileButtonState extends State<ProfileButton> {
   File _image;
   final picker = ImagePicker();
+
   Future getImage() async {
     final pickedFile = await picker.getImage(source: ImageSource.gallery);
 

@@ -41,7 +41,7 @@ class MainScreen extends StatefulWidget {
       ),
     ),
     ExploreScreen(),
-    ProfileScreen(),
+    ProfileScreen("James Fleming"),
   ];
 
   @override
@@ -87,6 +87,7 @@ class _MainScreenState extends State<MainScreen> {
         currentIndex: _selectedIndex,
         selectedItemColor: Colors.cyan[700],
         unselectedItemColor: Colors.grey[500],
+        //unselectedItemColor: Colors.green[200],
         showSelectedLabels: false,
         showUnselectedLabels: false,
         onTap: _onItemTapped,

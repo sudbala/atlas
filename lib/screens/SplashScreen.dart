@@ -2,6 +2,7 @@ import 'package:animated_splash_screen/animated_splash_screen.dart';
 import 'package:atlas/screens/Login/LoginScreen.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'MainScreen.dart';
 
@@ -13,9 +14,18 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen> {
   MainScreen mainScreen;
+  var isLoggedIn;
 
   Future<void> _setMap() async {
     mainScreen = MainScreen();
+    print("HELLO");
+  }
+
+  Future<void> _loggedIn() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    isLoggedIn = (prefs.getBool('isLoggedIn_Atlas') == null)
+        ? false
+        : prefs.getBool('isLoggedIn_Atlas');
   }
 
   @override
@@ -26,7 +36,7 @@ class _SplashScreenState extends State<SplashScreen> {
       // the specific screen size and dimensions of the device.
       data: new MediaQueryData(),
       child: FutureBuilder(
-          future: _setMap(),
+          future: _loggedIn(),
           builder: (context, snapshot) {
             return MaterialApp(
               // Has a duration, image, and transition types to the next screen.
@@ -41,7 +51,7 @@ class _SplashScreenState extends State<SplashScreen> {
               home: AnimatedSplashScreen(
                 duration: 2000,
                 splash: 'images/mountain.png',
-                nextScreen: LoginScreen(),
+                nextScreen: isLoggedIn ? MainScreen() : LoginScreen(),
                 splashTransition: SplashTransition.fadeTransition,
                 pageTransitionType: PageTransitionType.bottomToTop,
               ),

@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'SignInButton.dart';
 import 'StaggerAnimation.dart';
 import 'GoogleSignIn.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key key}) : super(key: key);
@@ -71,6 +72,12 @@ class LoginScreenState extends State<LoginScreen>
         false;
   }
 
+  // Sets the login status
+  void _storeLoggedInStatus(bool isLoggedIn) async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    pref.setBool('isLoggedIn_Atlas', isLoggedIn);
+  }
+
   @override
   Widget build(BuildContext context) {
     /// Time dilation slows down the animation for development purposes
@@ -111,7 +118,8 @@ class LoginScreenState extends State<LoginScreen>
                               });
                               signInWithGoogle().then((value) => {
                                 if (value != null) {
-                                  _playAnimation()
+                                  _playAnimation(),
+                                  _storeLoggedInStatus(true)
                                 }
                               });
                             },

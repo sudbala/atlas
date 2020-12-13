@@ -40,6 +40,8 @@ dependencies:
       url: https://github.com/cpboyd/plugins.git
       ref: image_picker_workaround
       path: packages/image_picker/image_picker
+  shared_preferences: ^0.5.12+4
+  
 
 flutter_icons:
   android: "launcher_icon"

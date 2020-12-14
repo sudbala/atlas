@@ -2,8 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <key>NSLocationWhenInUseUsageDescription</key>
-    <string>Shows your location on the map and helps improve the map</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleExecutable</key>
@@ -14,22 +12,35 @@
 	<string>6.0</string>
 	<key>CFBundleName</key>
 	<string>atlas</string>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Allow access to photo library</string>
-	<key>NSCameraUsageDescription</key>
-	<string>Allow access to camera to capture photos</string>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>Allow access to microphone</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
 	<string>$(FLUTTER_BUILD_NAME)</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.287911607325-ishrdangn3bp0cnvgjmf2i8fe6p9h2g4</string>
+			</array>
+		</dict>
+	</array>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Allow access to camera to capture photos</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Shows your location on the map and helps improve the map</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Allow access to microphone</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Allow access to photo library</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>

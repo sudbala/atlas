@@ -1,4 +1,3 @@
-
 import 'package:atlas/screens/Login/styles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
@@ -16,7 +15,6 @@ class LoginScreen extends StatefulWidget {
 
 class LoginScreenState extends State<LoginScreen>
     with TickerProviderStateMixin {
-
   /// [AnimationController] for the animation of the button
   AnimationController _loginButtonController;
   var animationStatus = 0;
@@ -28,11 +26,10 @@ class LoginScreenState extends State<LoginScreen>
   void initState() {
     super.initState();
     _loginButtonController = AnimationController(
-      duration: Duration(
-        milliseconds: 3000,
-      ),
-      vsync: this
-    );
+        duration: Duration(
+          milliseconds: 3000,
+        ),
+        vsync: this);
   }
 
   /// Disposes our [AnimationController] and app
@@ -53,22 +50,22 @@ class LoginScreenState extends State<LoginScreen>
   /// Dialog on pop
   Future<bool> _onWillPop() {
     return showDialog(
-      context: context,
-      child: new AlertDialog(
-        title: new Text('Are you sure?'),
-        actions: <Widget>[
-          new FlatButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: new Text('No'),
+          context: context,
+          child: new AlertDialog(
+            title: new Text('Are you sure?'),
+            actions: <Widget>[
+              new FlatButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: new Text('No'),
+              ),
+              new FlatButton(
+                onPressed: () =>
+                    Navigator.pushReplacementNamed(context, "/home"),
+                child: new Text('Yes'),
+              ),
+            ],
           ),
-          new FlatButton(
-            onPressed: () =>
-                Navigator.pushReplacementNamed(context, "/home"),
-            child: new Text('Yes'),
-          ),
-        ],
-      ),
-    ) ??
+        ) ??
         false;
   }
 
@@ -91,8 +88,8 @@ class LoginScreenState extends State<LoginScreen>
             image: backgroundImage,
           ),
           child: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
+              decoration: BoxDecoration(
+                  gradient: LinearGradient(
                 colors: <Color>[
                   const Color.fromRGBO(162, 146, 199, 0.8),
                   const Color.fromRGBO(51, 51, 63, 0.9),
@@ -100,8 +97,7 @@ class LoginScreenState extends State<LoginScreen>
                 stops: [0.2, 1.0],
                 begin: const FractionalOffset(0.0, 0.0),
                 end: const FractionalOffset(0.0, 1.0),
-              )
-            ),
+              )),
               child: new ListView(
                 padding: const EdgeInsets.all(0.0),
                 children: <Widget>[
@@ -110,34 +106,31 @@ class LoginScreenState extends State<LoginScreen>
                     children: <Widget>[
                       animationStatus == 0
                           ? new Padding(
-                        padding: const EdgeInsets.only(top: 500.0),
-                        child: new InkWell(
-                            onTap: () {
-                              setState(() {
-                                animationStatus = 1;
-                              });
-                              signInWithGoogle().then((value) => {
-                                if (value != null) {
-                                  _playAnimation(),
-                                  _storeLoggedInStatus(true)
-                                }
-                              });
-                            },
-                            child: SignIn()
-                        ),
-                      )
+                              padding: const EdgeInsets.only(top: 500.0),
+                              child: new InkWell(
+                                  onTap: () {
+                                    setState(() {
+                                      animationStatus = 1;
+                                    });
+                                    signInWithGoogle().then((value) => {
+                                          if (value != null)
+                                            {
+                                              _playAnimation(),
+                                              // Should be true if you want to auto sign in. Turn off for testing onboarding
+                                              _storeLoggedInStatus(true)
+                                            }
+                                        });
+                                  },
+                                  child: SignIn()),
+                            )
                           : new StaggerAnimation(
-                          buttonController:
-                          _loginButtonController.view),
+                              buttonController: _loginButtonController.view),
                     ],
                   ),
                 ],
-              )
-          ),
+              )),
         ),
       ),
     );
   }
-
-
 }

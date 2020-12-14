@@ -1,6 +1,14 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+final FirebaseAuth _auth = FirebaseAuth.instance;
+final User currentUser = _auth.currentUser;
+final String myId = currentUser.uid;
+
+final firestoreInstance = FirebaseFirestore.instance;
 
 class ProfileButton extends StatefulWidget {
   final int relationShipToProfile;
@@ -37,6 +45,7 @@ class _ProfileButtonState extends State<ProfileButton> {
               .push(MaterialPageRoute<void>(builder: (BuildContext context) {
             return Scaffold(
               appBar: AppBar(title: Text('Settings Pages')),
+              // Might want to add a way to log out here.
               body: Center(
                 child: Column(children: [
                   RawMaterialButton(
@@ -77,27 +86,48 @@ class _ProfileButtonState extends State<ProfileButton> {
 }
 
 class ProfileHeader extends StatelessWidget {
-  final String profileName;
-  ProfileHeader(this.profileName);
+  final String profileID;
+  ProfileHeader(this.profileID);
   Widget build(BuildContext context) {
-    return SafeArea(
-        child: Column(children: [
-      Expanded(
-        child: (Row(children: <Widget>[
-          Text("$profileName"),
-          (Expanded(child: Image.network("https://i.imgur.com/BoN9kdC.png")))
-        ])),
-      ),
-      SizedBox(height: 50)
-    ]));
+    // Initial UserName before we get data can be loading?
+    String UserName = "Loading";
+    // Initial Image should probably be a file loaded on phone eventually
+    String imageURL =
+        "https://firebasestorage.googleapis.com/v0/b/atlas-8b3b8.appspot.com/o/blankProfile.png?alt=media&token=8ffc6a2d-6e08-499a-b2cf-0f250a8b0f8f";
 
-    //return Text("James Fleming");
+    // grab collection of users
+    CollectionReference users = FirebaseFirestore.instance.collection("Users");
+    // here we will create a future builder.
+    return FutureBuilder<DocumentSnapshot>(
+        future: users.doc(profileID).get()
+          ..then((value) {
+            // If we are able to find a setup Profile for this profile Id, set up the usernamme and profile photo
+            UserName = value['UserName'];
+            imageURL = value['profileURL'];
+          }),
+        builder:
+            (BuildContext context, AsyncSnapshot<DocumentSnapshot> snapshot) {
+          //Map<String, dynamic> data = snapshot.data.data();
+          // Build the actual profile here. It will rebuild again once the future returns
+          return SafeArea(
+              child: Column(children: [
+            Expanded(
+              child: (Row(children: <Widget>[
+                Text("$UserName"),
+                (Expanded(child: Image.network("$imageURL")))
+              ])),
+            ),
+            SizedBox(height: 50)
+          ]));
+
+          //return Text("James Fleming");
+        });
   }
 }
 
 class ProfileScreen extends StatefulWidget {
-  final String profileName;
-  ProfileScreen(this.profileName);
+  final String profileID;
+  ProfileScreen(this.profileID);
   @override
   _ProfileScreenState createState() => _ProfileScreenState();
 }
@@ -108,7 +138,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   // A little bit of code to setup a tabController;
   TabController tController;
   // Here we would call to the FireStore database to actually get information on the profile
-  final int relationShipToProfile = 2;
+
   // Example Check in's just to see what having a list as one of the tabs feels like.
   final List<String> checkInExample =
       List.generate(50, (index) => "Check In $index");
@@ -120,6 +150,16 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   @override
   Widget build(BuildContext context) {
+    int relationShipToProfile =
+        -1; // this will be to represent two users that are not friends
+
+    if (widget.profileID == myId) {
+      relationShipToProfile = 3;
+    } else {
+      // Grab RelationShip to profile from firestore
+      relationShipToProfile = 2;
+    }
+
     return Scaffold(
         // We will use a NestedScrollView so that we can have a sliverAppBar with a Tab bar to differentiate between
         // The different pages of a user's profile.
@@ -137,7 +177,7 @@ class _ProfileScreenState extends State<ProfileScreen>
             expandedHeight: 450,
 
             flexibleSpace: FlexibleSpaceBar(
-              background: ProfileHeader(widget.profileName),
+              background: ProfileHeader(widget.profileID),
             ),
             bottom: TabBar(
               tabs: [
@@ -151,7 +191,8 @@ class _ProfileScreenState extends State<ProfileScreen>
             actions: <Widget>[ProfileButton(relationShipToProfile)],
           ),
 
-          /*SliverPersistentHeader(
+          /*
+          SliverPersistentHeader(
               delegate: CustomSliverDelegate(
                 expandedHeight: 120,
               ),
@@ -161,6 +202,7 @@ class _ProfileScreenState extends State<ProfileScreen>
           */
         ];
       },
+      // The bulk of a users view.
       body: TabBarView(
         children: [
           ListView.builder(

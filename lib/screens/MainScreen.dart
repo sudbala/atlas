@@ -3,6 +3,11 @@ import 'package:atlas/screens/ProfileScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:mapbox_gl/mapbox_gl.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+final FirebaseAuth _auth = FirebaseAuth.instance;
+final User currentUser = _auth.currentUser;
+final String id = currentUser.uid;
 
 class MainScreen extends StatefulWidget {
   /// Instance vars for the MapBox map
@@ -41,7 +46,7 @@ class MainScreen extends StatefulWidget {
       ),
     ),
     ExploreScreen(),
-    ProfileScreen("James Fleming"),
+    ProfileScreen(id),
   ];
 
   @override

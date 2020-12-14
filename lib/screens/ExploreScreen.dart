@@ -111,7 +111,8 @@ class Search extends SearchDelegate {
                   builder: (BuildContext context) {
                     // We will push a ProfileScreen and pass in
                     // SuggestionList[index] which is the search result that we selected
-                    return ProfileScreen(suggestionList[index]);
+                    return ProfileScreen(
+                        suggestionList[index].replaceAll(' ', ''));
                   },
                 ),
               );
@@ -169,7 +170,7 @@ class Search extends SearchDelegate {
               Navigator.of(context).push(
                 MaterialPageRoute<void>(
                   builder: (BuildContext context) {
-                    return ProfileScreen(selectedResult);
+                    return ProfileScreen(selectedResult.replaceAll(' ', ''));
                   },
                 ),
               );

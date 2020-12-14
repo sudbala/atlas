@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
-
 import '../MainScreen.dart';
+import './ProfileSetup.dart';
 
 class StaggerAnimation extends StatelessWidget {
   StaggerAnimation({Key key, this.buttonController})
@@ -118,8 +118,12 @@ class StaggerAnimation extends StatelessWidget {
   Widget build(BuildContext context) {
     buttonController.addListener(() {
       if (buttonController.isCompleted) {
-        Navigator.push(
-            context, MaterialPageRoute(builder: (context) => MainScreen()));
+        // Switched this to pushReplacement so that you can't go back to login page.
+        // Decide here whether to go to MainScreen or to a profile setup page.
+        Navigator.pushReplacement(
+            // Switched from mainScreen to Profile Setup
+            context,
+            MaterialPageRoute(builder: (context) => ProfileSetup()));
       }
     });
     return new AnimatedBuilder(

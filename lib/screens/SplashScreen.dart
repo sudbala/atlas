@@ -1,5 +1,6 @@
 import 'package:animated_splash_screen/animated_splash_screen.dart';
 import 'package:atlas/screens/Login/LoginScreen.dart';
+import 'package:atlas/screens/Login/ProfileSetup.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -51,7 +52,7 @@ class _SplashScreenState extends State<SplashScreen> {
               home: AnimatedSplashScreen(
                 duration: 2000,
                 splash: 'images/mountain.png',
-                nextScreen: isLoggedIn ? MainScreen() : LoginScreen(),
+                nextScreen: isLoggedIn ? ProfileSetup() : LoginScreen(),
                 splashTransition: SplashTransition.fadeTransition,
                 pageTransitionType: PageTransitionType.bottomToTop,
               ),

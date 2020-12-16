@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:atlas/screens/SettingsScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -20,20 +21,6 @@ class ProfileButton extends StatefulWidget {
 }
 
 class _ProfileButtonState extends State<ProfileButton> {
-  File _image;
-  final picker = ImagePicker();
-
-  Future getImage() async {
-    final pickedFile = await picker.getImage(source: ImageSource.gallery);
-
-    setState(() {
-      if (pickedFile != null) {
-        _image = File(pickedFile.path);
-      } else {
-        print('No image selected.');
-      }
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,28 +30,7 @@ class _ProfileButtonState extends State<ProfileButton> {
         onPressed: () => {
           Navigator.of(context)
               .push(MaterialPageRoute<void>(builder: (BuildContext context) {
-            return Scaffold(
-              appBar: AppBar(title: Text('Settings Pages')),
-              // Might want to add a way to log out here.
-              body: Center(
-                child: Column(children: [
-                  RawMaterialButton(
-                    fillColor: Theme.of(context).accentColor,
-                    child: Icon(
-                      Icons.add_photo_alternate_rounded,
-                      color: Colors.white,
-                    ),
-                    elevation: 8,
-                    onPressed: () {
-                      getImage();
-                    },
-                    padding: EdgeInsets.all(15),
-                    shape: CircleBorder(),
-                  ),
-                  _image == null ? Text("Select an Image") : Image.file(_image)
-                ]),
-              ),
-            );
+            return SettingsScreen();
           }))
         },
       );

@@ -3,7 +3,7 @@ import 'package:atlas/screens/Login/LoginScreen.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
+import 'package:google_fonts/google_fonts.dart';
 import 'MainScreen.dart';
 
 /// The splash screen. Navigates to the main screen of app
@@ -38,12 +38,13 @@ class _SplashScreenState extends State<SplashScreen> {
       child: FutureBuilder(
           future: _loggedIn(),
           builder: (context, snapshot) {
+            final textTheme = Theme.of(context).textTheme;
             return MaterialApp(
               // Has a duration, image, and transition types to the next screen.
 
               theme: ThemeData(
                 // Playing with themedata and colors here.
-
+                textTheme: GoogleFonts.andikaTextTheme(textTheme),
                 primarySwatch: Colors.blue,
 
                 primaryColor: Colors.cyan[800],

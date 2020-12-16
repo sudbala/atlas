@@ -1,7 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
-
 import '../MainScreen.dart';
+import './ProfileSetup.dart';
 
 class StaggerAnimation extends StatelessWidget {
   StaggerAnimation({Key key, this.buttonController})
@@ -116,10 +118,38 @@ class StaggerAnimation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Future<void> checkForProfile() {
+      // Grab our userID
+      final FirebaseAuth _auth = FirebaseAuth.instance;
+      final User currentUser = _auth.currentUser;
+      final String myId = currentUser.uid;
+      // Grab users collection
+      CollectionReference users =
+          FirebaseFirestore.instance.collection("Users");
+      // See if we can grab a profile document with give user Id
+      return users.doc(myId).get()
+        ..then((DocumentSnapshot documentSnapshot) {
+          // If this documentExists go straight to mainScreen()
+          if (documentSnapshot.exists) {
+            Navigator.pushReplacement(
+                // Switched from mainScreen to Profile Setup
+                context,
+                MaterialPageRoute(builder: (context) => MainScreen()));
+          } else {
+            // If document does not exist go ahead to Profile Setup and we will make one!
+            Navigator.pushReplacement(
+                // Switched from mainScreen to Profile Setup
+                context,
+                MaterialPageRoute(builder: (context) => ProfileSetup()));
+          }
+        });
+    }
+
     buttonController.addListener(() {
       if (buttonController.isCompleted) {
-        Navigator.push(
-            context, MaterialPageRoute(builder: (context) => MainScreen()));
+        // Switched this to pushReplacement so that you can't go back to login page.
+        // Decide here whether to go to MainScreen or to a profile setup page once signup is complete :)
+        checkForProfile();
       }
     });
     return new AnimatedBuilder(

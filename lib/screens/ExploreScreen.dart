@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:atlas/screens/ProfileScreen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ExploreScreen extends StatefulWidget {
   // Define just a super basic example list that will be searched on because it is passed into SearcH method
@@ -92,6 +93,9 @@ class Search extends SearchDelegate {
   // Suggestion list will be built based off of the query going through
   // listIn
   List<String> suggestionList = [];
+  List<String> idList = [];
+
+  //
 
   String selectedResult = "";
   @override
@@ -111,8 +115,7 @@ class Search extends SearchDelegate {
                   builder: (BuildContext context) {
                     // We will push a ProfileScreen and pass in
                     // SuggestionList[index] which is the search result that we selected
-                    return ProfileScreen(
-                        suggestionList[index].replaceAll(' ', ''));
+                    return ProfileScreen(idList[index]);
                   },
                 ),
               );
@@ -123,59 +126,85 @@ class Search extends SearchDelegate {
 
   // This will be our recentList, it will show when we don't yet have a full query ready
   // Needs to be built in the future, for now, no need to worry about it.
-  List<String> recentList = ["Poopy pants", "poopy poopity pants"];
+  List<String> recentList = ["Press Enter to Search"];
+
+  Future<List<String>> queryUsers(String queryString) async {
+    List<String> mySuggestionList = [];
+    idList = [];
+    if (queryString.isNotEmpty) {
+      List<QueryDocumentSnapshot> documentList = (await FirebaseFirestore
+              .instance
+              .collection('Users') // We will perform two queries
+              // I found this off an example online and honestly not sure what it really does
+              // By no means perfect or even fast searching but does the job
+              .where('UserName', isGreaterThanOrEqualTo: queryString)
+              .where('UserName', isLessThan: queryString + 'z')
+              .get()) // Grab the QuerydocumentSnapshots from these
+          .docs;
+      // Go through each document we get and add to suggestionList
+      // and id list
+      documentList.forEach((QueryDocumentSnapshot doc) {
+        // Add userName field for this doc
+        mySuggestionList.add(doc.get("UserName"));
+        // Add id of this doc which is the userId
+        idList.add(doc.id);
+      });
+    }
+    return mySuggestionList;
+  }
 
   // buildSuggestions is called everytime the user types a new character for "automatic" search
   @override
   Widget buildSuggestions(BuildContext context) {
-    // This is the list we want to populate
-    suggestionList = [];
-    // Check if query is 2 or longer or for  now just check if it is empty
-    // Maybe in future if we are using shingles we can make sure search is of certain length
-    (query.isEmpty)
-        ? suggestionList = recentList
-        // Here when query is long enough we see the most basic search function happening
-        // Searches through everything in list and keeps the ones that contain the query
-        // Linear time, not very fast for a bunch of usernames but a proof of concept is nice
-        // IN the future instead of doing searching here, we call an external function that returns a list
-        // and set suggestionList to that.
+    // Method to populate the suggestion List
 
-        // WARNING "where" is case sensitive
-        : suggestionList.addAll(listIn.where(
-            (element) => element.contains(query.toLowerCase()),
-          ));
+    // This is the list we want to populate
 
     //showResults(context);
 
     // Here we build the list based on whatever suggestionList is set to
-    return ListView.builder(
-      itemCount: suggestionList.length,
-      itemBuilder: (context, index) {
-        return ListTile(
-            title: Text(
-              suggestionList[index],
-            ),
-            onTap: () {
-              // If we tap one of the list results,
-              // Set the selected result
-              selectedResult = suggestionList[index];
-              // Switch the list to the results list
-              showResults(context);
+    // Use a future builder so that we reset once suggestionList has been updated to whatever queryUsers returns
+    return FutureBuilder<List>(
+        future: queryUsers(query.toLowerCase()),
+        builder: (BuildContext context, AsyncSnapshot<List> snapshot) {
+          if (snapshot.hasData) {
+            suggestionList = snapshot.data;
+            //print(snapshot.data);
+          } else if (snapshot.hasError) {
+            print(snapshot.error);
+          } else {
+            suggestionList = [];
+          }
+          return ListView.builder(
+            itemCount: suggestionList.length,
+            itemBuilder: (context, index) {
+              return ListTile(
+                  title: Text(
+                    suggestionList[index],
+                  ),
+                  onTap: () {
+                    // If we tap one of the list results,
+                    // Set the selected result
+                    selectedResult = suggestionList[index];
+                    // Switch the list to the results list
+                    //showResults(context);
 
-              // immediately head off to the correct profile photo. No need to tap the "results" again
+                    // immediately head off to the correct profile photo. No need to tap the "results" again
 
-              // The hack we are using is that our "suggestions" are actually the results we are looking for.
-              // Notice most social medias do it this way. Searches instantly update as you type. Pressing search does nothing but putting the text screen down
+                    // The hack we are using is that our "suggestions" are actually the results we are looking for.
+                    // Notice most social medias do it this way. Searches instantly update as you type. Pressing search does nothing but putting the text screen down
 
-              Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (BuildContext context) {
-                    return ProfileScreen(selectedResult.replaceAll(' ', ''));
-                  },
-                ),
-              );
-            });
-      },
-    );
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (BuildContext context) {
+                          // Return the profile page of the associated id.
+                          return ProfileScreen(idList[index]);
+                        },
+                      ),
+                    );
+                  });
+            },
+          );
+        });
   }
 }

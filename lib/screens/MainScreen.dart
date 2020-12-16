@@ -22,6 +22,7 @@ class MainScreen extends StatefulWidget {
   static List<Widget> _widgetOptions = <Widget>[
     Scaffold(
       appBar: AppBar(
+        elevation: 0.0,
         title: Text("Atlas"),
         actions: <Widget>[
           IconButton(
@@ -71,6 +72,7 @@ class _MainScreenState extends State<MainScreen> {
       bottomNavigationBar: BottomNavigationBar(
         // Must set to fixed here if you don't want icons moving. I dont think we want icons moving
         type: BottomNavigationBarType.fixed,
+
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(Icons.home),

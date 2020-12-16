@@ -29,8 +29,11 @@ class _ProfileSetup extends State<ProfileSetup> {
     CollectionReference users = FirebaseFirestore.instance.collection("Users");
 
     Future<void> addUser() {
+      // If we want to require that usernames are unique we need to add in a bit of code that make sure that the username has not been taken yet
+
       return users.doc(myId).set({
-        'UserName': userName,
+        // Set the username (let's make them all lowercase to make my life easier searching)
+        'UserName': userName.toLowerCase(),
         // Might as well set a default url here
         'profileURL':
             'https://firebasestorage.googleapis.com/v0/b/atlas-8b3b8.appspot.com/o/blankProfile.png?alt=media&token=8ffc6a2d-6e08-499a-b2cf-0f250a8b0f8f'
@@ -42,18 +45,6 @@ class _ProfileSetup extends State<ProfileSetup> {
           .catchError((error) => print("Failed to add user")));
     }
 
-// This code will move a user from the signup page to the main app almost immeditaely when they sign in
-    /// There might be a better way to do this. because you can briefly see the signup page before being redirected
-    /// Maybe do this check after the sign up button is pressed?
-    users.doc(myId).get()
-      ..then((DocumentSnapshot documentSnapshot) {
-        if (documentSnapshot.exists) {
-          Navigator.pushReplacement(
-              // Switched from mainScreen to Profile Setup
-              context,
-              MaterialPageRoute(builder: (context) => MainScreen()));
-        }
-      });
     return Scaffold(
         body: Container(
             decoration: BoxDecoration(
@@ -85,12 +76,8 @@ class _ProfileSetup extends State<ProfileSetup> {
                               InputDecoration(hintText: "Enter a Username")),
                       ElevatedButton(
                           child: Text("Sign Up"),
-                          // Add networking shit here were we send out a request to create a user in the database and assign a username
-                          //
-
-                          // This is gonna take some thought on how we want to go about designing this
-                          // Especially for the searching aspect.
                           onPressed: (() {
+                            // When user click sign up run addUser!
                             addUser();
                           }))
                     ])))));

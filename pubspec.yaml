@@ -35,11 +35,7 @@ dependencies:
   google_sign_in: ^4.5.6
   cloud_firestore: ^0.14.4
   firebase_storage: ^5.1.0
-  image_picker:
-    git:
-      url: https://github.com/cpboyd/plugins.git
-      ref: image_picker_workaround
-      path: packages/image_picker/image_picker
+  image_picker: 0.6.7+15
   shared_preferences: ^0.5.12+4
   
 

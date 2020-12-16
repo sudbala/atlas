@@ -264,12 +264,10 @@ packages:
   image_picker:
     dependency: "direct main"
     description:
-      path: "packages/image_picker/image_picker"
-      ref: image_picker_workaround
-      resolved-ref: e9965bd9bfc8e401ee595dd0a9ee6f0940e9b127
-      url: "https://github.com/cpboyd/plugins.git"
-    source: git
-    version: "0.6.7+12"
+      name: image_picker
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.6.7+15"
   image_picker_platform_interface:
     dependency: transitive
     description:

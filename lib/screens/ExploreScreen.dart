@@ -11,7 +11,7 @@ class ExploreScreen extends StatefulWidget {
     "james fleming",
     "sudharsan balasubramani",
     "henry fleming",
-    "sailesh balasubramani",
+    "sailesh bala",
     "poop pants in my poop",
     "david bowie",
     "steve jobs",

@@ -13,29 +13,40 @@ class _UserNameState extends State<UserName> {
   String validText = 'Invalid Username';
   CollectionReference users = FirebaseFirestore.instance.collection('Users');
   bool userNameValid = false;
+  final _formKey = GlobalKey<FormState>();
 
-  Future<void> checkUserName() async {
+  Future<bool> _checkUserName(String username) async {
     /// Check if the username is valid
     /// This is if its over 6 characters, not already taken, and not empty
-    if (this.userName != null && this.userName.length >= 6) {
-      var result =
-          await users.where('UserName', isEqualTo: this.userName).get();
-      setState(() {
-        userNameValid = result.docs.isEmpty;
-      });
+    if (username != null && username.length >= 6) {
+      var result = await users.where('UserName', isEqualTo: username).get();
+      return result.docs.isEmpty;
 //      if (userNameValid) print('Valid');
 //      else print('Invalid');
     }
-    setState(() {
-      userNameValid =  false;
-      validText = 'Invalid Username';
-    });
+    return false;
+  }
+
+  bool _userExist = false;
+  checkUserValue<bool>(String user) {
+    print("WE GOT HERE");
+    _checkUserName(user).then((value) => {
+          if (!value)
+            {
+              print("Username Is Valid"),
+              _userExist = value,
+            }
+          else
+            {
+              print("Username is Invalid"),
+              _userExist = value,
+            }
+        });
+    return _userExist;
   }
 
   void validUserName() {
-    setState(() {
-      validText = 'Valid Username!';
-    });
+    validText = 'Valid Username!';
   }
 
   @override
@@ -43,51 +54,75 @@ class _UserNameState extends State<UserName> {
     final widgetWidth = MediaQuery.of(context).size.width;
     return Container(
       child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Center(
-              child: Text("Welcome to Atlas"),
-            ),
-            SizedBox(
-              height: 20.0,
-            ),
-            Container(
-              width: widgetWidth / 1.5,
-              child: TextField(
-                /// Once the user submits their text, we update our string
-                onChanged: (String value) {
-                  userName = value;
-                  checkUserName();
-                },
-                decoration: new InputDecoration(
-                    border: new OutlineInputBorder(
-                      borderRadius: const BorderRadius.all(
-                        const Radius.circular(10.0),
-                      ),
-                    ),
-                    filled: true,
-                    hintStyle: new TextStyle(color: Colors.grey[800]),
-                    hintText: "Enter a Username",
-                    fillColor: Colors.white70),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Center(
+                child: Text("Welcome to Atlas"),
               ),
-            ),
-            SizedBox(
-              height: 20.0,
-            ),
-            FlatButton(
-              onPressed: userNameValid ? validUserName : null,
-              child: Text(validText),
-              textColor: Colors.blue,
-              disabledColor: Colors.grey,
-              disabledTextColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                  side: BorderSide(
-                      color: Colors.blue, width: 1, style: BorderStyle.solid),
-                  borderRadius: BorderRadius.circular(50)),
-            ),
-          ],
+              SizedBox(
+                height: 20.0,
+              ),
+              Container(
+                  width: widgetWidth / 1.5,
+                  child: TextFormField(
+                    onChanged: (String value) {
+                      userName = value;
+                      _formKey.currentState.validate();
+                    },
+                    textCapitalization: TextCapitalization.words,
+                    keyboardType: TextInputType.text,
+                    decoration: InputDecoration(
+                        border: new OutlineInputBorder(
+                          borderRadius: const BorderRadius.all(
+                            const Radius.circular(20.0),
+                          ),
+                        ),
+                        filled: true,
+                        hintStyle: new TextStyle(color: Colors.grey[800]),
+                        hintText: "Enter a Username",
+                        fillColor: Colors.white70),
+                    validator: (value) => checkUserValue(value)
+                        ? "Username taken or invalid. (>= 6)"
+                        : null,
+                  )
+//              TextField(
+//                /// Once the user submits their text, we update our string
+//                onChanged: (String value) {
+//                  userName = value;
+//                  checkUserName();
+//                },
+//                decoration: new InputDecoration(
+//                    border: new OutlineInputBorder(
+//                      borderRadius: const BorderRadius.all(
+//                        const Radius.circular(10.0),
+//                      ),
+//                    ),
+//                    filled: true,
+//                    hintStyle: new TextStyle(color: Colors.grey[800]),
+//                    hintText: "Enter a Username",
+//                    fillColor: Colors.white70),
+//              ),
+                  ),
+//              SizedBox(
+//                height: 20.0,
+//              ),
+//              FlatButton(
+//                onPressed: userNameValid ? validUserName : null,
+//                child: Text(validText),
+//                textColor: Colors.blue,
+//                disabledColor: Colors.grey,
+//                disabledTextColor: Colors.white,
+//                shape: RoundedRectangleBorder(
+//                    side: BorderSide(
+//                        color: Colors.blue, width: 1, style: BorderStyle.solid),
+//                    borderRadius: BorderRadius.circular(50)),
+//              ),
+            ],
+          ),
         ),
       ),
     );

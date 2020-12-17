@@ -1,7 +1,9 @@
 //import 'package:atlas/screens/Login/testing.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_bloc/flutter_form_bloc.dart';
+import 'package:flutter_swiper/flutter_swiper.dart';
 
 class AsyncFieldValidationFormBloc extends FormBloc<String, String> {
   final username = TextFieldBloc(
@@ -53,6 +55,8 @@ class AsyncFieldValidationFormBloc extends FormBloc<String, String> {
 }
 
 class UsernameValidator extends StatelessWidget {
+  SwiperController _controller;
+  UsernameValidator(this._controller);
   @override
   Widget build(BuildContext context) {
 
@@ -68,6 +72,7 @@ class UsernameValidator extends StatelessWidget {
               },
               onSuccess: (context, state) {
                 LoadingDialog.hide(context);
+                _controller.next();
               },
               onFailure: (context, state) {
                 LoadingDialog.hide(context);
@@ -86,6 +91,9 @@ class UsernameValidator extends StatelessWidget {
                         Center(
                           child: Text("Welcome to Atlas"),
                         ),
+                        SizedBox(
+                          height: 25.0,
+                        ),
                         TextFieldBlocBuilder(
                           textFieldBloc: formBloc.username,
                           suffixButton: SuffixButton.asyncValidating,
@@ -102,6 +110,26 @@ class UsernameValidator extends StatelessWidget {
                               new TextStyle(color: Colors.grey[800]),
                               hintText: "Username",
                               fillColor: Colors.white70),
+                        ),
+                        SizedBox(
+                          height: 25.0,
+                        ),
+                        FlatButton(
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(18.0),
+                              side: BorderSide(color: Colors.blue)),
+                          color: Colors.white,
+                          textColor: Colors.blue,
+                          padding: EdgeInsets.all(8.0),
+                          onPressed: () {
+                            formBloc.submit();
+                          },
+                          child: Text(
+                            "Next".toUpperCase(),
+                            style: TextStyle(
+                              fontSize: 14.0,
+                            ),
+                          ),
                         ),
                       ],
                     ),

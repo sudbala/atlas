@@ -39,13 +39,10 @@ class _ProfileSetupState extends State<ProfileSetup> {
   double _fade;
   bool _autoplayDisableOnInteraction;
   CustomLayoutOption customLayoutOption;
+  SwiperController _controller;
 
 
-  final List<Widget> setupWidgets = [
-    UsernameValidator(),
-    Placeholder(),
-    Placeholder(),
-  ];
+  List<Widget> setupWidgets;
 
   @override
   void initState() {
@@ -59,6 +56,7 @@ class _ProfileSetupState extends State<ProfileSetup> {
     _currentIndex = 0;
     _curve = Curves.ease;
     _scale = .3;
+    _controller = new SwiperController();
     _layout = SwiperLayout.CUSTOM;
     _radius = 20;
     _padding = 0.0;
@@ -70,6 +68,12 @@ class _ProfileSetupState extends State<ProfileSetup> {
     _outer = false;
     _scrollDirection = Axis.horizontal;
     _autoplayDisableOnInteraction = false;
+
+    setupWidgets = [
+      UsernameValidator(_controller),
+      Placeholder(),
+      Placeholder(),
+    ];
     super.initState();
   }
 
@@ -85,9 +89,9 @@ class _ProfileSetupState extends State<ProfileSetup> {
         color: Colors.white,
         borderRadius: BorderRadius.only(
             topLeft: Radius.circular(20),
-            topRight: Radius.circular(10),
-            bottomLeft: Radius.circular(10),
-            bottomRight: Radius.circular(10)
+            topRight: Radius.circular(20),
+            bottomLeft: Radius.circular(20),
+            bottomRight: Radius.circular(20)
         ),
         boxShadow: [
           BoxShadow(
@@ -152,7 +156,7 @@ class _ProfileSetupState extends State<ProfileSetup> {
             curve: _curve,
             scale: _scale,
             itemWidth: 300.0,
-//        controller: _controller,
+            controller: _controller,
             layout: _layout,
             outer: _outer,
             itemHeight: height,

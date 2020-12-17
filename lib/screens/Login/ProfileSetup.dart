@@ -42,7 +42,7 @@ class _ProfileSetupState extends State<ProfileSetup> {
 
 
   final List<Widget> setupWidgets = [
-    UserName(),
+    UsernameValidator(),
     Placeholder(),
     Placeholder(),
   ];
@@ -84,7 +84,7 @@ class _ProfileSetupState extends State<ProfileSetup> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(10),
+            topLeft: Radius.circular(20),
             topRight: Radius.circular(10),
             bottomLeft: Radius.circular(10),
             bottomRight: Radius.circular(10)

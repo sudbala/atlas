@@ -16,6 +16,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 // Sounds like we need a future builder
 // I will soon later.
 
+final FirebaseAuth _auth = FirebaseAuth.instance;
+final User currentUser = _auth.currentUser;
+final String myId = currentUser.uid;
+
 class ProfileSetup extends StatefulWidget {
   @override
   _ProfileSetupState createState() => new _ProfileSetupState();
@@ -57,7 +61,7 @@ class _ProfileSetupState extends State<ProfileSetup> {
     _curve = Curves.ease;
     _scale = .3;
     _controller = new SwiperController();
-    _layout = SwiperLayout.CUSTOM;
+    _layout = SwiperLayout.DEFAULT;
     _radius = 20;
     _padding = 0.0;
     _loop = false;
@@ -71,9 +75,12 @@ class _ProfileSetupState extends State<ProfileSetup> {
 
     setupWidgets = [
       UsernameValidator(_controller),
-      Placeholder(),
-      Placeholder(),
+      InputNameField(swiperController: _controller),
+      UploadProfilePicture(),
     ];
+
+    /// Add the user
+    FirebaseFirestore.instance.collection('Users').doc(myId).set({});
     super.initState();
   }
 
@@ -96,8 +103,8 @@ class _ProfileSetupState extends State<ProfileSetup> {
         boxShadow: [
           BoxShadow(
             color: Colors.grey.withOpacity(0.8),
-            spreadRadius: 5,
-            blurRadius: 7,
+            spreadRadius: 2,
+            blurRadius: 3,
             offset: Offset(0, 3), // changes position of shadow
           ),
         ],
@@ -131,47 +138,44 @@ class _ProfileSetupState extends State<ProfileSetup> {
           end: const FractionalOffset(0.0, 1.0),
         )),
         child: Scaffold(
-          //resizeToAvoidBottomInset: false,
+          resizeToAvoidBottomInset: false,
           backgroundColor: Colors.transparent,
-          body: Swiper(
-//            onTap: (int index) {
-//              Navigator.of(context)
-//                  .push(new MaterialPageRoute(builder: (BuildContext context) {
-//                return Scaffold(
-//                  appBar: AppBar(
-//                    title: Text("New page"),
-//                  ),
-//                  body: Container(),
-//                );
-//              }));
-//            },
-            customLayoutOption: customLayoutOption,
-            fade: _fade,
-            index: _currentIndex,
-            onIndexChanged: (int index) {
-              setState(() {
-                _currentIndex = index;
-              });
-            },
-            curve: _curve,
-            scale: _scale,
-            itemWidth: 300.0,
-            controller: _controller,
-            layout: _layout,
-            outer: _outer,
-            itemHeight: height,
-            viewportFraction: _viewportFraction,
-            autoplayDelay: _autoplayDely,
-            loop: _loop,
-            autoplay: _autoplay,
-            itemBuilder: _buildItem,
-            itemCount: _itemCount,
-            scrollDirection: _scrollDirection,
-            indicatorLayout: PageIndicatorLayout.COLOR,
-            autoplayDisableOnInteraction: _autoplayDisableOnInteraction,
-            pagination: new SwiperPagination(
-                builder: const DotSwiperPaginationBuilder(
-                    size: 5.0, activeSize: 5.0, space: 5.0)),
+          body: Container(
+            alignment: Alignment.center,
+            child: SizedBox(
+              height: height,
+              child: Swiper(
+                physics: NeverScrollableScrollPhysics(),
+                customLayoutOption: customLayoutOption,
+                fade: _fade,
+                index: _currentIndex,
+                onIndexChanged: (int index) {
+                  setState(() {
+                    _currentIndex = index;
+                  });
+                },
+
+                curve: _curve,
+                scale: _scale,
+                itemWidth: 300.0,
+                controller: _controller,
+                layout: _layout,
+                outer: _outer,
+                itemHeight: height,
+                viewportFraction: _viewportFraction,
+                autoplayDelay: _autoplayDely,
+                loop: _loop,
+                autoplay: _autoplay,
+                itemBuilder: _buildItem,
+                itemCount: _itemCount,
+                scrollDirection: _scrollDirection,
+                indicatorLayout: PageIndicatorLayout.COLOR,
+                autoplayDisableOnInteraction: _autoplayDisableOnInteraction,
+                pagination: new SwiperPagination(
+                    builder: const DotSwiperPaginationBuilder(color: Colors.grey,
+                        size: 5.0, activeSize: 5.0, space: 5.0)),
+              ),
+            ),
           ),
         ),
       ),

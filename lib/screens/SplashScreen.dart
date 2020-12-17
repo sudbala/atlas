@@ -53,7 +53,7 @@ class _SplashScreenState extends State<SplashScreen> {
               home: AnimatedSplashScreen(
                 duration: 2000,
                 splash: 'images/mountain.png',
-                nextScreen: isLoggedIn ? ProfileSetup() : LoginScreen(),
+                nextScreen: isLoggedIn ? MainScreen() : LoginScreen(),
                 splashTransition: SplashTransition.fadeTransition,
                 pageTransitionType: PageTransitionType.bottomToTop,
               ),

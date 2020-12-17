@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:mapbox_gl/mapbox_gl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 final FirebaseAuth _auth = FirebaseAuth.instance;
 final User currentUser = _auth.currentUser;
@@ -17,13 +18,19 @@ class MainScreen extends StatefulWidget {
   static const String STYLE =
       'mapbox://styles/sudowoodo/ckig8qtzi539p19pb08ricter';
 
-  static const TextStyle optionStyle =
-      TextStyle(fontSize: 30, fontWeight: FontWeight.bold);
+  static const TextStyle optionStyle = TextStyle(
+    fontSize: 10,
+    fontWeight: FontWeight.bold,
+  );
+  static const TextStyle headerStyle = TextStyle(
+    fontSize: 25,
+  );
   static List<Widget> _widgetOptions = <Widget>[
     Scaffold(
       appBar: AppBar(
         elevation: 0.0,
-        title: Text("Atlas"),
+        title: Text("Atlas",
+            style: GoogleFonts.ebGaramond(textStyle: headerStyle)),
         actions: <Widget>[
           IconButton(
             icon: Icon(Icons.rate_review_rounded),

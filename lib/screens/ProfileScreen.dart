@@ -21,7 +21,6 @@ class ProfileButton extends StatefulWidget {
 }
 
 class _ProfileButtonState extends State<ProfileButton> {
-
   @override
   Widget build(BuildContext context) {
     if (widget.relationShipToProfile == 3) {
@@ -35,7 +34,7 @@ class _ProfileButtonState extends State<ProfileButton> {
         },
       );
     } else {
-      // This is not your profile page
+      //  Case when viewing someone else's profile page
       String buttonText;
       if (widget.relationShipToProfile == 2) {
         buttonText = "Friends";

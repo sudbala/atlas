@@ -73,9 +73,6 @@ flutter:
     - images/mountain.png
     - images/landscape.jpg
     - images/boRidge.JPG
-    - images/bg0.jpeg
-    - images/bg1.jpeg
-    - images/bg2.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.

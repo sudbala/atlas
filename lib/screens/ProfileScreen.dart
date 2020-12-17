@@ -115,6 +115,8 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   @override
   Widget build(BuildContext context) {
+    // Profile Height is currently set to 3/5 of user's screen
+    double profileHeight = MediaQuery.of(context).size.height * (3 / 5);
     int relationShipToProfile =
         -1; // this will be to represent two users that are not friends
 
@@ -138,8 +140,8 @@ class _ProfileScreenState extends State<ProfileScreen>
             pinned: true,
             // Whether part of the appbar is always there
             floating: true,
-            snap: false,
-            expandedHeight: 450,
+            snap: true,
+            expandedHeight: profileHeight,
 
             flexibleSpace: FlexibleSpaceBar(
               background: ProfileHeader(widget.profileID),

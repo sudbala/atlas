@@ -5,12 +5,17 @@ import 'package:flutter/foundation.dart';
 import 'package:mapbox_gl/mapbox_gl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:geolocator/geolocator.dart';
+import 'AtlasMap.dart';
 
 final FirebaseAuth _auth = FirebaseAuth.instance;
 final User currentUser = _auth.currentUser;
 final String id = currentUser.uid;
 
 class MainScreen extends StatefulWidget {
+  /// Location Variables
+
+
   /// Instance vars for the MapBox map
   static const String ACCESS_TOKEN =
       'pk.eyJ1Ijoic3Vkb3dvb2RvIiwiYSI6ImNraWc4bjZraDA4aHAyeG9pNnJpM2kzdmMifQ'
@@ -18,51 +23,89 @@ class MainScreen extends StatefulWidget {
   static const String STYLE =
       'mapbox://styles/sudowoodo/ckig8qtzi539p19pb08ricter';
 
-  static const TextStyle optionStyle = TextStyle(
-    fontSize: 10,
-    fontWeight: FontWeight.bold,
-  );
-  static const TextStyle headerStyle = TextStyle(
-    fontSize: 25,
-  );
-  static List<Widget> _widgetOptions = <Widget>[
-    Scaffold(
-      appBar: AppBar(
-        elevation: 0.0,
-        title: Text("Atlas",
-            style: GoogleFonts.ebGaramond(textStyle: headerStyle)),
-        actions: <Widget>[
-          IconButton(
-            icon: Icon(Icons.rate_review_rounded),
-            onPressed: () {
-              // Fill out onPressed here.
-            },
-          )
-        ],
-      ),
-      body: Text(
-        'Index 0: Home',
-        style: optionStyle,
-      ),
-    ),
-    Scaffold(
-      body: MapboxMap(
-        initialCameraPosition: const CameraPosition(
-            target: LatLng(38.897957, -77.036560), zoom: 10),
-        accessToken: ACCESS_TOKEN,
-        styleString: STYLE,
-      ),
-    ),
-    ExploreScreen(),
-    ProfileScreen(id),
-  ];
-
   @override
   _MainScreenState createState() => _MainScreenState();
 }
 
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
+  List<Widget> _widgetOptions;
+  Position pos;
+
+  Future<void> _getPosition() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+    print("called");
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      return Future.error('Location service are disabled.');
+    }
+
+    /// Check permissions
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.deniedForever) {
+      return Future.error(
+          'Location permissions are permanently denied, we cannot request permissions');
+    }
+
+    /// Check if just denied for now and request permissions
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission != LocationPermission.whileInUse &&
+          permission != LocationPermission.always) {
+        return Future.error(
+            ('Location permissions are denied (actual value: $permission).'));
+      }
+    }
+
+    /// Return position if we got here past all checks and requests
+    await Geolocator.getCurrentPosition()
+        .then((value) => pos = value);
+  }
+
+  @override
+  void initState() {
+    _widgetOptions = <Widget>[
+      Scaffold(
+        appBar: AppBar(
+          elevation: 0.0,
+          title: Text(
+            "Atlas",
+            style: GoogleFonts.ebGaramond(
+              textStyle: TextStyle(
+                fontSize: 25,
+              ),
+            ),
+          ),
+          actions: <Widget>[
+            IconButton(
+              icon: Icon(Icons.rate_review_rounded),
+              onPressed: () {
+                // Fill out onPressed here.
+              },
+            )
+          ],
+        ),
+        body: Text(
+          'Index 0: Home',
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+      FutureBuilder(
+        future: _getPosition(),
+        builder: (context, snapshot) {
+          return AtlasMap(currentPosition: pos,);
+        },
+      ),
+      ExploreScreen(),
+      ProfileScreen(id),
+    ];
+    super.initState();
+  }
 
   void _onItemTapped(int index) {
     setState(() {
@@ -72,39 +115,43 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final bottomBarHeight = MediaQuery.of(context).size.height / 15;
     return Scaffold(
       body: Center(
-        child: MainScreen._widgetOptions.elementAt(_selectedIndex),
+        child: _widgetOptions.elementAt(_selectedIndex),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        // Must set to fixed here if you don't want icons moving. I dont think we want icons moving
-        type: BottomNavigationBarType.fixed,
+      bottomNavigationBar: SizedBox(
+        height: bottomBarHeight,
+        child: BottomNavigationBar(
+          // Must set to fixed here if you don't want icons moving. I dont think we want icons moving
+          type: BottomNavigationBarType.fixed,
 
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.map),
-            label: 'Map',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.explore_rounded),
-            label: 'Search',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
-          )
-        ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: Colors.cyan[700],
-        unselectedItemColor: Colors.grey[500],
-        //unselectedItemColor: Colors.green[200],
-        showSelectedLabels: false,
-        showUnselectedLabels: false,
-        onTap: _onItemTapped,
+          items: <BottomNavigationBarItem>[
+            BottomNavigationBarItem(
+              icon: SizedBox(height: 0, child: Icon(Icons.home)),
+              label: 'Home',
+            ),
+            BottomNavigationBarItem(
+              icon: SizedBox(height: 0, child: Icon(Icons.map)),
+              label: 'Map',
+            ),
+            BottomNavigationBarItem(
+              icon: SizedBox(height: 0, child: Icon(Icons.explore_rounded)),
+              label: 'Search',
+            ),
+            BottomNavigationBarItem(
+              icon: SizedBox(height: 0, child: Icon(Icons.person)),
+              label: 'Profile',
+            )
+          ],
+          currentIndex: _selectedIndex,
+          selectedItemColor: Colors.cyan[700],
+          unselectedItemColor: Colors.grey[500],
+          //unselectedItemColor: Colors.green[200],
+          showSelectedLabels: false,
+          showUnselectedLabels: false,
+          onTap: _onItemTapped,
+        ),
       ),
     );
   }

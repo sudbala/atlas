@@ -72,39 +72,43 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final bottomBarHeight = MediaQuery.of(context).size.height/15;
     return Scaffold(
       body: Center(
         child: MainScreen._widgetOptions.elementAt(_selectedIndex),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        // Must set to fixed here if you don't want icons moving. I dont think we want icons moving
-        type: BottomNavigationBarType.fixed,
+      bottomNavigationBar: SizedBox(
+        height: bottomBarHeight,
+        child: BottomNavigationBar(
+          // Must set to fixed here if you don't want icons moving. I dont think we want icons moving
+          type: BottomNavigationBarType.fixed,
 
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.map),
-            label: 'Map',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.explore_rounded),
-            label: 'Search',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
-          )
-        ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: Colors.cyan[700],
-        unselectedItemColor: Colors.grey[500],
-        //unselectedItemColor: Colors.green[200],
-        showSelectedLabels: false,
-        showUnselectedLabels: false,
-        onTap: _onItemTapped,
+          items: <BottomNavigationBarItem>[
+            BottomNavigationBarItem(
+              icon: SizedBox(height: 0, child: Icon(Icons.home)),
+              label: 'Home',
+            ),
+            BottomNavigationBarItem(
+              icon: SizedBox(height: 0, child: Icon(Icons.map)),
+              label: 'Map',
+            ),
+            BottomNavigationBarItem(
+              icon: SizedBox(height: 0, child: Icon(Icons.explore_rounded)),
+              label: 'Search',
+            ),
+            BottomNavigationBarItem(
+              icon: SizedBox(height: 0, child: Icon(Icons.person)),
+              label: 'Profile',
+            )
+          ],
+          currentIndex: _selectedIndex,
+          selectedItemColor: Colors.cyan[700],
+          unselectedItemColor: Colors.grey[500],
+          //unselectedItemColor: Colors.green[200],
+          showSelectedLabels: false,
+          showUnselectedLabels: false,
+          onTap: _onItemTapped,
+        ),
       ),
     );
   }

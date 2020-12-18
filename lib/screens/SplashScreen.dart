@@ -16,7 +16,7 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen> {
   MainScreen mainScreen;
-  var isLoggedIn;
+  var isLoggedIn = false;
 
   Future<void> _setMap() async {
     mainScreen = MainScreen();

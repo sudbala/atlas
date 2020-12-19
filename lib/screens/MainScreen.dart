@@ -1,12 +1,13 @@
 import 'package:atlas/screens/ExploreScreen.dart';
+import 'package:atlas/screens/Feed.dart';
+import 'package:atlas/screens/MainMap.dart';
 import 'package:atlas/screens/ProfileScreen.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
-import 'package:mapbox_gl/mapbox_gl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:geolocator/geolocator.dart';
 import 'AtlasMap.dart';
+
 
 final FirebaseAuth _auth = FirebaseAuth.instance;
 final User currentUser = _auth.currentUser;
@@ -17,11 +18,6 @@ class MainScreen extends StatefulWidget {
 
 
   /// Instance vars for the MapBox map
-  static const String ACCESS_TOKEN =
-      'pk.eyJ1Ijoic3Vkb3dvb2RvIiwiYSI6ImNraWc4bjZraDA4aHAyeG9pNnJpM2kzdmMifQ'
-      '.97alUuajzxtaLCkz2ura4g';
-  static const String STYLE =
-      'mapbox://styles/sudowoodo/ckig8qtzi539p19pb08ricter';
 
   @override
   _MainScreenState createState() => _MainScreenState();

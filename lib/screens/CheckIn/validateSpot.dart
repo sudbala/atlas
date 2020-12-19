@@ -110,13 +110,13 @@ class _ValidateSpotState extends State<ValidateSpot> {
           // have the document show that the user has visited, it is there first time
           await areaDoc
               .collection("Spots")
-              .doc(spotId)
+              .doc(closestId)
               .collection("VisitedUsers")
               .doc(myId)
               .set({"hasVisited": true});
           // If the user has never checked in here before we will greet them with a Congratulations on exploring (which is different than discovering)
           message = "Congratulations on exploring";
-          return Future.value(["1", message, "$zone/$spotId"]);
+          return Future.value(["1", message, "$zone/$closestId"]);
         }
       } else {
         // if we weren't too close then make a new spot!

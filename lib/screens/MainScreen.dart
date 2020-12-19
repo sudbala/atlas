@@ -8,14 +8,12 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:geolocator/geolocator.dart';
 import 'AtlasMap.dart';
 
-
 final FirebaseAuth _auth = FirebaseAuth.instance;
 final User currentUser = _auth.currentUser;
 final String id = currentUser.uid;
 
 class MainScreen extends StatefulWidget {
   /// Location Variables
-
 
   /// Instance vars for the MapBox map
 
@@ -56,45 +54,19 @@ class _MainScreenState extends State<MainScreen> {
     }
 
     /// Return position if we got here past all checks and requests
-    await Geolocator.getCurrentPosition()
-        .then((value) => pos = value);
+    await Geolocator.getCurrentPosition().then((value) => pos = value);
   }
 
   @override
   void initState() {
     _widgetOptions = <Widget>[
-      Scaffold(
-        appBar: AppBar(
-          elevation: 0.0,
-          title: Text(
-            "Atlas",
-            style: GoogleFonts.ebGaramond(
-              textStyle: TextStyle(
-                fontSize: 25,
-              ),
-            ),
-          ),
-          actions: <Widget>[
-            IconButton(
-              icon: Icon(Icons.rate_review_rounded),
-              onPressed: () {
-                // Fill out onPressed here.
-              },
-            )
-          ],
-        ),
-        body: Text(
-          'Index 0: Home',
-          style: TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
+      Feed(),
       FutureBuilder(
         future: _getPosition(),
         builder: (context, snapshot) {
-          return AtlasMap(currentPosition: pos,);
+          return AtlasMap(
+            currentPosition: pos,
+          );
         },
       ),
       ExploreScreen(),

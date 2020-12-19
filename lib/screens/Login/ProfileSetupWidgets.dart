@@ -301,8 +301,7 @@ class _UploadProfilePictureState extends State<UploadProfilePicture> {
 
   /// We want to be able to get an image from the camera
   Future _imgFromCamera() async {
-    final image =
-        await picker.getImage(source: ImageSource.camera, imageQuality: 100);
+    final image = await picker.getImage(source: ImageSource.camera);
 
     /// Once we get the image, we set the state so that the _profileImage is
     /// update with the image.
@@ -319,8 +318,7 @@ class _UploadProfilePictureState extends State<UploadProfilePicture> {
 
   /// If we want to get an image from the gallery
   Future _imgFromGallery() async {
-    final image =
-        await picker.getImage(source: ImageSource.gallery, imageQuality: 100);
+    final image = await picker.getImage(source: ImageSource.gallery);
 
     /// Now once we get the image, we once again set the image and bool
     setState(() {
@@ -374,9 +372,8 @@ class _UploadProfilePictureState extends State<UploadProfilePicture> {
   /// Method to save a photo to the Firebase Storage
   Future<String> uploadFile() async {
     String returnURL;
-    Reference storageReference = FirebaseStorage.instance
-        .ref()
-        .child('profilePhotos/${basename(_profileImage.path)}');
+    Reference storageReference =
+        FirebaseStorage.instance.ref().child('profilePhotos/$myId');
 
     /// Get the storage reference of where the image will go, then use an
     /// upload task to put upload it there. Upon completion, we get URL

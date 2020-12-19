@@ -1,10 +1,9 @@
 import 'package:atlas/screens/ExploreScreen.dart';
+import 'package:atlas/screens/Feed.dart';
+import 'package:atlas/screens/MainMap.dart';
 import 'package:atlas/screens/ProfileScreen.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
-import 'package:mapbox_gl/mapbox_gl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 final FirebaseAuth _auth = FirebaseAuth.instance;
 final User currentUser = _auth.currentUser;
@@ -12,47 +11,10 @@ final String id = currentUser.uid;
 
 class MainScreen extends StatefulWidget {
   /// Instance vars for the MapBox map
-  static const String ACCESS_TOKEN =
-      'pk.eyJ1Ijoic3Vkb3dvb2RvIiwiYSI6ImNraWc4bjZraDA4aHAyeG9pNnJpM2kzdmMifQ'
-      '.97alUuajzxtaLCkz2ura4g';
-  static const String STYLE =
-      'mapbox://styles/sudowoodo/ckig8qtzi539p19pb08ricter';
 
-  static const TextStyle optionStyle = TextStyle(
-    fontSize: 10,
-    fontWeight: FontWeight.bold,
-  );
-  static const TextStyle headerStyle = TextStyle(
-    fontSize: 25,
-  );
   static List<Widget> _widgetOptions = <Widget>[
-    Scaffold(
-      appBar: AppBar(
-        elevation: 0.0,
-        title: Text("Atlas",
-            style: GoogleFonts.ebGaramond(textStyle: headerStyle)),
-        actions: <Widget>[
-          IconButton(
-            icon: Icon(Icons.rate_review_rounded),
-            onPressed: () {
-              // Fill out onPressed here.
-            },
-          )
-        ],
-      ),
-      body: Text(
-        'Index 0: Home',
-        style: optionStyle,
-      ),
-    ),
-    Scaffold(
-      body: MapboxMap(
-        initialCameraPosition: const CameraPosition(
-            target: LatLng(38.897957, -77.036560), zoom: 10),
-        accessToken: ACCESS_TOKEN,
-        styleString: STYLE,
-      ),
-    ),
+    Feed(),
+    MainMap(),
     ExploreScreen(),
     ProfileScreen(id),
   ];

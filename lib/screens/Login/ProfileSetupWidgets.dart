@@ -1,4 +1,3 @@
-//import 'package:atlas/screens/Login/testing.dart';
 import 'package:atlas/screens/MainScreen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';

@@ -494,8 +494,8 @@ class _UploadProfilePictureState extends State<UploadProfilePicture> {
               TextButton(
                 onPressed: () {
                   _savePhoto();
-                  Navigator.of(context)
-                      .push(MaterialPageRoute<void>(builder: (context) {
+                  Navigator.of(context).pushReplacement(
+                      MaterialPageRoute<void>(builder: (context) {
                     return MainScreen();
                   }));
                 },

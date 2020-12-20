@@ -67,6 +67,9 @@ class _AtlasMapState extends State<AtlasMap> {
     // Add a symbol tapped callback
     controller.onSymbolTapped.add(_onSymbolTapped);
 
+    //LatLngBounds bounds = await controller.getVisibleRegion();
+    //bounds.northeast.
+
     // Go through all the spots and add each symbol
     spots.forEach((spot) {
       controller.addSymbol(_getSymbolOptions(spot[1], spot[0]));

@@ -1,7 +1,9 @@
+import 'dart:collection';
 import 'dart:math';
 import 'package:atlas/screens/CheckIn/validateSpot.dart';
 import 'package:atlas/screens/LocationScreen.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:mapbox_gl/mapbox_gl.dart';
 import 'package:utm/utm.dart';
 
@@ -28,27 +30,78 @@ class _SelectSpotState extends State<SelectSpot> {
     }));
   }
 
-  void _onMapCreated(MapboxMapController controller) {
+  LatLng initCamera = LatLng(32.9, -130.16);
+  LatLng userStart = LatLng(0, 0);
+
+  // Just pulled this over.. kinda lazy
+  Future<bool> _getPosition() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+    print("called");
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      return Future.error('Location service are disabled.');
+    }
+
+    /// Check permissions
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.deniedForever) {
+      return Future.error(
+          'Location permissions are permanently denied, we cannot request permissions');
+    }
+
+    /// Check if just denied for now and request permissions
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission != LocationPermission.whileInUse &&
+          permission != LocationPermission.always) {
+        return Future.error(
+            ('Location permissions are denied (actual value: $permission).'));
+      }
+    }
+
+    /// Return position if we got here past all checks and requests
+    await Geolocator.getCurrentPosition()
+        .then((value) => userStart = LatLng(value.latitude, value.longitude));
+    return Future.value(true);
+  }
+
+  void _onMapCreated(MapboxMapController controller) async {
     // when the map is created we can add our symbols.
     this.controller = controller;
-
     // Add a symbol tapped callback
+    //await _getPosition();
+    //controller.moveCamera(CameraUpdate.newLatLng(userStart));
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Long Press to Select a Location"),
-      ),
-      body: MapboxMap(
-        initialCameraPosition: const CameraPosition(
-            target: LatLng(43.701017, -72.289265), zoom: 12),
-        accessToken: ACCESS_TOKEN,
-        styleString: STYLE,
-        onMapCreated: _onMapCreated,
-        onMapLongClick: _onMapLongClick,
-      ),
-    );
+    double tHeight = MediaQuery.of(context).size.height * (1 / 19);
+    return FutureBuilder(
+        future: _getPosition(),
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            return Scaffold(
+              appBar: AppBar(
+                toolbarHeight: tHeight,
+                title: Text("Long Press to Select a Location"),
+              ),
+              body: MapboxMap(
+                initialCameraPosition:
+                    CameraPosition(target: userStart, zoom: 15),
+                accessToken: ACCESS_TOKEN,
+                styleString: STYLE,
+                myLocationEnabled: true,
+                onMapCreated: _onMapCreated,
+                onMapLongClick: _onMapLongClick,
+                compassEnabled: true,
+                //trackCameraPosition: ,
+              ),
+            );
+          } else {
+            return Scaffold(body: Center(child: CircularProgressIndicator()));
+          }
+        });
   }
 }

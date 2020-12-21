@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:atlas/screens/CheckIn/SelectSpot.dart';
 
@@ -14,8 +15,11 @@ class _FeedState extends State<Feed> {
 
   @override
   Widget build(BuildContext context) {
+    double tHeight = MediaQuery.of(context).size.height * (1 / 19);
     return Scaffold(
       appBar: AppBar(
+        toolbarHeight: tHeight,
+
         elevation: 0.0,
         title: Text("Atlas",
             // Set the font of the appbar header here

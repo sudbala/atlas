@@ -8,14 +8,26 @@ final User currentUser = _auth.currentUser;
 final String myId = currentUser.uid;
 
 class AddPhotos extends StatefulWidget {
+  // Creation Id tells us whether this spot is discovered, explored, or returned to for later reference
+  String creationId;
+  // Title for now is the text that is displayed on this widget
   String title;
+
+// Full id has the zone and the full northing and easting
+  String fullId;
+  // Spot id is just the northing and easting separated by ;
   String spotId;
+
   String zone;
+
   String area;
+
   String checkInId;
-  AddPhotos(String title, String spotId) {
+  AddPhotos(String creationId, String title, String fullId) {
+    this.creationId = creationId;
+    this.fullId = fullId;
     this.title = title;
-    var split = (spotId.split("/"));
+    var split = (fullId.split("/"));
 
     this.zone = split[0];
     this.spotId = split[1];
@@ -70,7 +82,7 @@ class _AddPhotosState extends State<AddPhotos> {
               onPressed: () {
                 Navigator.of(context).pushReplacement(
                     MaterialPageRoute<void>(builder: (BuildContext context) {
-                  return AddDescription();
+                  return AddDescription(widget.creationId, widget.fullId);
                 }));
               }),
         ],

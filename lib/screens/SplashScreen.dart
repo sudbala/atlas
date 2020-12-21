@@ -41,6 +41,7 @@ class _SplashScreenState extends State<SplashScreen> {
           future: _loggedIn(),
           builder: (context, snapshot) {
             final textTheme = Theme.of(context).textTheme;
+
             return MaterialApp(
               // Has a duration, image, and transition types to the next screen.
 
@@ -48,7 +49,6 @@ class _SplashScreenState extends State<SplashScreen> {
                 // Playing with themedata and colors here.
                 textTheme: GoogleFonts.andikaTextTheme(textTheme),
                 primarySwatch: Colors.blue,
-
                 primaryColor: Colors.cyan[800],
               ),
               home: AnimatedSplashScreen(

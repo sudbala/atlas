@@ -1,3 +1,7 @@
+/*
+
+
+READY TO BE DELETED
 import 'package:atlas/screens/LocationScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:mapbox_gl/mapbox_gl.dart';
@@ -6,6 +10,9 @@ import 'package:utm/utm.dart';
 // We will have an example list of spots that we will add as symbols
 // In the future I think it would be really cool if using our indexing system of spots, the map would load all spots that
 // are in the viewers map plus spots a bit outside what the viewer can see and then as the user scrolls they are loaded. This way we don't have to load all spots at once!
+
+
+
 final List<List> spots = [
   [LatLng(37.928942, -122.577107), 'embassy-15'],
   [LatLng(37.921621, -122.584711), 'waterfall-15'],
@@ -93,3 +100,4 @@ class _MainMapState extends State<MainMap> {
     );
   }
 }
+*/

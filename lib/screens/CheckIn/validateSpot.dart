@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:searchable_dropdown/searchable_dropdown.dart';
 import 'package:utm/utm.dart';
 
 final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -29,6 +30,7 @@ class ValidateSpot extends StatefulWidget {
 
 class _ValidateSpotState extends State<ValidateSpot> {
   bool userHasBeen = false;
+
   double minDistance =
       200; // meters about 2 football fields. can be played with
 
@@ -39,7 +41,35 @@ class _ValidateSpotState extends State<ValidateSpot> {
   String spotId;
   DocumentReference areaDoc;
   final _nameController = TextEditingController();
-  final _bioController = TextEditingController();
+
+  // Selected Value of dropdown menu for spot genre selection when a spot is created.
+  String selectedValue;
+  // Possible selection values for the spot genre / type menu selection.
+
+  List<String> possibleSpotTypes = [
+    "Swimming Hole",
+    "Hot Springs",
+    "Viewpoint",
+    "Skate Spot",
+    "Surf Break",
+    "Campsite",
+    "Wild Camp",
+    "Hidden Gem",
+    "Park",
+  ];
+  List<DropdownMenuItem> items = [];
+
+  @override
+  void initState() {
+    // When we create the state turn the possible spot types into DropDownMenu Items..
+    possibleSpotTypes.forEach((type) {
+      items.add(DropdownMenuItem(
+        child: Text(type),
+        value: type,
+      ));
+    });
+    super.initState();
+  }
 
 // This method checks if a spot has been discovered before and handles accordingly
   Future<List<String>> validateSpot() async {
@@ -57,11 +87,10 @@ class _ValidateSpotState extends State<ValidateSpot> {
     spotId =
         "${widget.spotUTM.northing.toString()};${widget.spotUTM.easting.toString()}";
 
-    // Check if this area has any spots.
-    DocumentSnapshot areaSnap =
-        await zones.doc(zone).collection("Area").doc(area).get();
-
     areaDoc = zones.doc(zone).collection("Area").doc(area);
+
+    // Check if this area has any spots.
+    DocumentSnapshot areaSnap = await areaDoc.get();
 
     if (areaSnap.exists) {
       // There have been spots in this area. time to query and see if we are too close to any of them.
@@ -105,7 +134,7 @@ class _ValidateSpotState extends State<ValidateSpot> {
         // If the user has already been here we will greet them with a welcome back
         if (checkInSnap.exists) {
           message = "Welcome back to";
-          return Future.value(["1", message, "$zone/$closestId"]);
+          return Future.value(["2", message, "$zone/$closestId"]);
         } else {
           // have the document show that the user has visited, it is there first time
           await areaDoc
@@ -161,9 +190,14 @@ class _ValidateSpotState extends State<ValidateSpot> {
     });
   }
 // Pulled this from the onboarding... might want to make an object for it later when we also put this in settings...
+// CreateSpot page creates the page that is loaded when I spot needs to be created. ASk the user for a title and genre of the spot
 
   Widget createSpotPage() {
     final widgetWidth = MediaQuery.of(context).size.width;
+    final menuHeight = MediaQuery.of(context).size.height / 1.3;
+    final viewInsets = EdgeInsets.fromWindowPadding(
+        WidgetsBinding.instance.window.viewInsets,
+        WidgetsBinding.instance.window.devicePixelRatio);
     return Center(
       child: Container(
         width: widgetWidth / 1.1,
@@ -195,21 +229,29 @@ class _ValidateSpotState extends State<ValidateSpot> {
                 height: 25.0,
               ),
               Container(
-                child: TextField(
-                  inputFormatters: [LengthLimitingTextInputFormatter(100)],
-                  controller: _bioController,
-                  decoration: InputDecoration(
-                      border: new OutlineInputBorder(
-                        borderRadius: const BorderRadius.all(
-                          const Radius.circular(20.0),
-                        ),
-                      ),
-                      filled: true,
-                      hintStyle: new TextStyle(color: Colors.grey[800]),
-                      hintText: "What type of spot is this?",
-                      fillColor: Colors.white70),
-                ),
-              ),
+                  // Use a dropdown menu that is search able to let the user pick what type of spot this is.
+                  //  I like it but not sure how to customize its color and such
+                  // Maybe just put a box around it and color that.
+                  child: SearchableDropdown.single(
+                items: items,
+                value: selectedValue,
+                hint: "What Type of Spot is this?",
+                searchHint: null,
+                onChanged: (value) {
+                  // Update value of selectedValue. selectedValue will be sent to save when the user is ready.
+                  setState(() {
+                    selectedValue = value;
+                  });
+                },
+                // must be false
+                //dialogBox: false,
+                isExpanded: true,
+                // Size of the box when it expands to the search menu
+                // menuConstraints: BoxConstraints.expand(
+                //height: menuHeight - viewInsets.bottom)),
+              )
+                  //BoxConstraints.tight(Size.fromHeight(menuHeight)),
+                  ),
               FlatButton(
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(18.0),
@@ -218,11 +260,12 @@ class _ValidateSpotState extends State<ValidateSpot> {
                 textColor: Colors.blue,
                 padding: EdgeInsets.all(8.0),
                 onPressed: () async {
-                  await _saveSpot(_nameController.text, _bioController.text);
+                  // Call SaveSpot and then once that is done move on to the next part!
+                  await _saveSpot(_nameController.text, selectedValue);
                   Navigator.of(context).pushReplacement(
                       MaterialPageRoute<void>(builder: (BuildContext context) {
                     return AddPhotos(
-                        "Congratulations on discovering", "$zone/$spotId");
+                        "0", "Congratulations on discovering", "$zone/$spotId");
                   }));
                 },
                 child: Text(
@@ -249,12 +292,13 @@ class _ValidateSpotState extends State<ValidateSpot> {
             if (snapshot.data[0] == "0") {
               // This was a brand new spot. We need the user to name it and give it a genre.
               child = createSpotPage();
-            } else if (snapshot.data[0] == "1") {
+            } else {
               // This was a spot that has been discovered but not for this user.
               // Push the user to the add photo pages.
               child = Center(child: CircularProgressIndicator());
-              print("${snapshot.data[2]}");
-              return AddPhotos(snapshot.data[1], snapshot.data[2]);
+
+              return AddPhotos(
+                  snapshot.data[0], snapshot.data[1], snapshot.data[2]);
             }
           } else if (snapshot.hasError) {
             child = Center(child: Text("error occured"));

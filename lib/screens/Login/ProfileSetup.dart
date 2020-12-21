@@ -45,7 +45,6 @@ class _ProfileSetupState extends State<ProfileSetup> {
   CustomLayoutOption customLayoutOption;
   SwiperController _controller;
 
-
   List<Widget> setupWidgets;
 
   @override
@@ -79,8 +78,11 @@ class _ProfileSetupState extends State<ProfileSetup> {
       UploadProfilePicture(),
     ];
 
-    /// Add the user
-    FirebaseFirestore.instance.collection('Users').doc(myId).set({});
+    // Create the user with an empty array of ExploredSpots
+    FirebaseFirestore.instance
+        .collection('Users')
+        .doc(myId)
+        .set({"ExploredSpots": []});
     super.initState();
   }
 
@@ -98,8 +100,7 @@ class _ProfileSetupState extends State<ProfileSetup> {
             topLeft: Radius.circular(20),
             topRight: Radius.circular(20),
             bottomLeft: Radius.circular(20),
-            bottomRight: Radius.circular(20)
-        ),
+            bottomRight: Radius.circular(20)),
         boxShadow: [
           BoxShadow(
             color: Colors.grey.withOpacity(0.8),
@@ -154,7 +155,6 @@ class _ProfileSetupState extends State<ProfileSetup> {
                     _currentIndex = index;
                   });
                 },
-
                 curve: _curve,
                 scale: _scale,
                 itemWidth: 300.0,
@@ -172,8 +172,11 @@ class _ProfileSetupState extends State<ProfileSetup> {
                 indicatorLayout: PageIndicatorLayout.COLOR,
                 autoplayDisableOnInteraction: _autoplayDisableOnInteraction,
                 pagination: new SwiperPagination(
-                    builder: const DotSwiperPaginationBuilder(color: Colors.grey,
-                        size: 5.0, activeSize: 5.0, space: 5.0)),
+                    builder: const DotSwiperPaginationBuilder(
+                        color: Colors.grey,
+                        size: 5.0,
+                        activeSize: 5.0,
+                        space: 5.0)),
               ),
             ),
           ),

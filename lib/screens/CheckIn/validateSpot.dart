@@ -94,18 +94,14 @@ class _ValidateSpotState extends State<ValidateSpot> {
 
     if (areaSnap.exists) {
       // There have been spots in this area. time to query and see if we are too close to any of them.
-      // Ill add a spot anyway now just kicks and assume there were no spots close enough so this one actually did get its own!
+      // Go through all the spots in this area. this way we only have to read 1 document
+      areaSnap.data()["spotsInArea"].forEach((id) {
+        /// Split the spot id into
+        var idSplit = id.split(";");
 
-      QuerySnapshot spotShot = await areaDoc.collection("Spots").get();
+        double Northing = idSplit[0];
 
-      // go through each document in the spots collection of a given area. Ugh linear time :(
-
-      spotShot.docs.forEach((document) {
-        Map<String, dynamic> data = document.data();
-
-        double Northing = data["Northing"];
-
-        double Easting = data["Easting"];
+        double Easting = idSplit[1];
 
         // euclidean distance should work find for points close together (same area) https://math.stackexchange.com/questions/738529/distance-between-two-points-in-utm-coordinates
         double distance = sqrt(pow((Easting - widget.spotUTM.easting), 2) +
@@ -114,7 +110,7 @@ class _ValidateSpotState extends State<ValidateSpot> {
         /// Check to see if the distance between two spots is less than set minDistance. Find the closest one.
         if (distance < minDistance) {
           if (distance < closestDistance) {
-            closestId = "${document.id}";
+            closestId = "$id";
             closestDistance = distance;
           }
         }
@@ -154,10 +150,9 @@ class _ValidateSpotState extends State<ValidateSpot> {
       }
     } else {
       // this area has no spots! lets make one.
-      // Grab a document reference.
 
-      // Create a document for the area
-      await areaDoc.set({"exist": true});
+      //Create a document for the area
+      await areaDoc.set({"spotsInArea": new List<String>()});
 
       // return that this spot is new with a message of congratulations.
       return Future.value(
@@ -181,6 +176,10 @@ class _ValidateSpotState extends State<ValidateSpot> {
         .doc(myId)
         .set({"hasVisited": true});
 
+    // add the spot to the list of spots in this area. Will help with future searching
+    await areaDoc.update({
+      "spotsInArea": FieldValue.arrayUnion(["$spotId"])
+    });
     // Create the spot
     return areaDoc.collection("Spots").doc(spotId).set({
       "Northing": Northing,
@@ -194,10 +193,6 @@ class _ValidateSpotState extends State<ValidateSpot> {
 
   Widget createSpotPage() {
     final widgetWidth = MediaQuery.of(context).size.width;
-    final menuHeight = MediaQuery.of(context).size.height / 1.3;
-    final viewInsets = EdgeInsets.fromWindowPadding(
-        WidgetsBinding.instance.window.viewInsets,
-        WidgetsBinding.instance.window.devicePixelRatio);
     return Center(
       child: Container(
         width: widgetWidth / 1.1,
@@ -206,6 +201,12 @@ class _ValidateSpotState extends State<ValidateSpot> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
+              Center(
+                  child: Text(
+                      " Wow, you are the very first Atlas user to discover this spot!")),
+              SizedBox(
+                height: 25.0,
+              ),
               Center(
                 child: Text("Enter a Name and type of spot!"),
               ),

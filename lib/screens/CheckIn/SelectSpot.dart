@@ -4,6 +4,7 @@ import 'package:atlas/screens/CheckIn/validateSpot.dart';
 import 'package:atlas/screens/LocationScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:mapbox_gl/mapbox_gl.dart';
 import 'package:utm/utm.dart';
 
@@ -85,7 +86,11 @@ class _SelectSpotState extends State<SelectSpot> {
             return Scaffold(
               appBar: AppBar(
                 toolbarHeight: tHeight,
-                title: Text("Long Press to Select a Location"),
+                title: FittedBox(
+                    fit: BoxFit.fitWidth,
+                    child: Center(
+                        child: Text("Tap and Hold on a Location",
+                            style: GoogleFonts.ebGaramond()))),
               ),
               body: MapboxMap(
                 initialCameraPosition:
@@ -94,7 +99,7 @@ class _SelectSpotState extends State<SelectSpot> {
                 styleString: STYLE,
                 myLocationEnabled: true,
                 onMapCreated: _onMapCreated,
-                onMapLongClick: _onMapLongClick,
+                onMapClick: _onMapLongClick,
                 compassEnabled: true,
                 //trackCameraPosition: ,
               ),

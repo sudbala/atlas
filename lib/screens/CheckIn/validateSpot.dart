@@ -95,13 +95,15 @@ class _ValidateSpotState extends State<ValidateSpot> {
     if (areaSnap.exists) {
       // There have been spots in this area. time to query and see if we are too close to any of them.
       // Go through all the spots in this area. this way we only have to read 1 document
+      print("${areaSnap.data()["spotsInArea"]}");
+
       areaSnap.data()["spotsInArea"].forEach((id) {
         /// Split the spot id into
         var idSplit = id.split(";");
 
-        double Northing = idSplit[0];
+        double Northing = double.parse(idSplit[0]);
 
-        double Easting = idSplit[1];
+        double Easting = double.parse(idSplit[1]);
 
         // euclidean distance should work find for points close together (same area) https://math.stackexchange.com/questions/738529/distance-between-two-points-in-utm-coordinates
         double distance = sqrt(pow((Easting - widget.spotUTM.easting), 2) +

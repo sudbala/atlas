@@ -71,20 +71,6 @@ class _ValidateSpotState extends State<ValidateSpot> {
     super.initState();
   }
 
-  // When a user discovers or explore a spot it needs to be added to
-  void addToExploreSpots() {
-    // It is important to keep a list of spots that the user has actually personally explored
-    // This will be nice for their profile where they can just look at what they have explored.
-    // When two friends become friends we will add all spots from ExploredSpots to each others visible spots section of profile
-    // Furthermore when we delete someone as a friend we can remove one's friend id from all the spots that that user has visited
-  }
-
-  void addToVisibleSpots() {
-    // We need to check if a user had this spot already in their profile of places they can view on map
-
-    // If they don't
-  }
-
 // This method checks if a spot has been discovered before and handles accordingly
   Future<List<String>> validateSpot() async {
     // The first step is to make sure we have created a zone for this spot
@@ -101,11 +87,10 @@ class _ValidateSpotState extends State<ValidateSpot> {
     spotId =
         "${widget.spotUTM.northing.toString()};${widget.spotUTM.easting.toString()}";
 
-    // Check if this area has any spots.
-    DocumentSnapshot areaSnap =
-        await zones.doc(zone).collection("Area").doc(area).get();
-
     areaDoc = zones.doc(zone).collection("Area").doc(area);
+
+    // Check if this area has any spots.
+    DocumentSnapshot areaSnap = await areaDoc.get();
 
     if (areaSnap.exists) {
       // There have been spots in this area. time to query and see if we are too close to any of them.
@@ -209,7 +194,10 @@ class _ValidateSpotState extends State<ValidateSpot> {
 
   Widget createSpotPage() {
     final widgetWidth = MediaQuery.of(context).size.width;
-    final menuHeight = MediaQuery.of(context).size.height / 3;
+    final menuHeight = MediaQuery.of(context).size.height / 1.3;
+    final viewInsets = EdgeInsets.fromWindowPadding(
+        WidgetsBinding.instance.window.viewInsets,
+        WidgetsBinding.instance.window.devicePixelRatio);
     return Center(
       child: Container(
         width: widgetWidth / 1.1,
@@ -241,28 +229,29 @@ class _ValidateSpotState extends State<ValidateSpot> {
                 height: 25.0,
               ),
               Container(
-                // Use a dropdown menu that is search able to let the user pick what type of spot this is.
-                //  I like it but not sure how to customize its color and such
-                // Maybe just put a box around it and color that.
-                child: SearchableDropdown.single(
-                  items: items,
-                  value: selectedValue,
-                  hint: "What Type of Spot is this?",
-                  searchHint: null,
-                  onChanged: (value) {
-                    // Update value of selectedValue. selectedValue will be sent to save when the user is ready.
-                    setState(() {
-                      selectedValue = value;
-                    });
-                  },
-                  // must be false
-                  dialogBox: false,
-                  isExpanded: true,
-                  // Size of the box when it expands to the search menu
-                  menuConstraints:
-                      BoxConstraints.tight(Size.fromHeight(menuHeight)),
-                ),
-              ),
+                  // Use a dropdown menu that is search able to let the user pick what type of spot this is.
+                  //  I like it but not sure how to customize its color and such
+                  // Maybe just put a box around it and color that.
+                  child: SearchableDropdown.single(
+                items: items,
+                value: selectedValue,
+                hint: "What Type of Spot is this?",
+                searchHint: null,
+                onChanged: (value) {
+                  // Update value of selectedValue. selectedValue will be sent to save when the user is ready.
+                  setState(() {
+                    selectedValue = value;
+                  });
+                },
+                // must be false
+                //dialogBox: false,
+                isExpanded: true,
+                // Size of the box when it expands to the search menu
+                // menuConstraints: BoxConstraints.expand(
+                //height: menuHeight - viewInsets.bottom)),
+              )
+                  //BoxConstraints.tight(Size.fromHeight(menuHeight)),
+                  ),
               FlatButton(
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(18.0),

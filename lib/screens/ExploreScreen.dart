@@ -27,12 +27,14 @@ class ExploreScreen extends StatefulWidget {
 class _ExploreScreenState extends State<ExploreScreen> {
   @override
   Widget build(BuildContext context) {
+    double tHeight = MediaQuery.of(context).size.height * (1 / 19);
     const TextStyle headerStyle = TextStyle(
       fontSize: 25,
     );
     // Here we build the explore page.
     return Scaffold(
       appBar: AppBar(
+        toolbarHeight: tHeight,
         actions: <Widget>[
           IconButton(
               icon: Icon(Icons.search),

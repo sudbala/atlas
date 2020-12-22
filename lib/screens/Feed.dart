@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:atlas/screens/CheckIn/SelectSpot.dart';
 
 class Feed extends StatefulWidget {
+  Feed({Key key}) : super(key: key);
   @override
   _FeedState createState() => _FeedState();
 }

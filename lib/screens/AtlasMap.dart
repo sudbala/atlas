@@ -154,8 +154,6 @@ class _AtlasMapState extends State<AtlasMap> {
 
   @override
   Widget build(BuildContext context) {
-    /// We want to return a Future builder of the map because we want to obtain
-    /// position before we display map.
 
     return Scaffold(
       body: MapboxMap(

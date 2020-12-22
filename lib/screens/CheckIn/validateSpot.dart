@@ -14,8 +14,8 @@ final String myId = currentUser.uid;
 
 // After picking a spot on the map we will check the database to see how to handle this spot
 // The three cases are:
-// User has never been to spot and in fact spot has never been vistied by any atlas user
-// User has never been to spot but spot indeed has been visted by another atlas user.
+// User has never been to spot and in fact spot has never been visited by any atlas user
+// User has never been to spot but spot indeed has been visited by another atlas user.
 // User has been to spot before and is just checking in again
 // ignore: must_be_immutable
 class ValidateSpot extends StatefulWidget {

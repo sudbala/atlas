@@ -86,7 +86,10 @@ class _MainScreenState extends State<MainScreen> {
     final bottomBarHeight = MediaQuery.of(context).size.height / 15;
     return Scaffold(
       body: Center(
-        child: _widgetOptions.elementAt(_selectedIndex),
+        child: IndexedStack(
+          index: _selectedIndex,
+          children: _widgetOptions,
+        ),
       ),
       bottomNavigationBar: SizedBox(
         height: bottomBarHeight,

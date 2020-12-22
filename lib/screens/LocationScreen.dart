@@ -45,7 +45,8 @@ class _LocationScreenState extends State<LocationScreen> {
           ],
         ),
         body: Center(
-          child: Text("This spot is a ${widget.data["Genre"]}"),
+          child: Text(
+              "This spot is a ${widget.data["Genre"]} with time of symbol creation ${widget.data["time"]}"),
         ));
   }
 }

@@ -47,6 +47,10 @@ class AtlasMap extends StatefulWidget {
 
 class _AtlasMapState extends State<AtlasMap> {
   MapboxMapController controller;
+  CollectionReference zones = FirebaseFirestore.instance
+      .collection("Users")
+      .doc(myId)
+      .collection("visibleZones");
 
   void _onSymbolTapped(Symbol symbol) {
     // when we tap a symbol we want to go to that locations page where we can see photos and a description of it!
@@ -106,6 +110,7 @@ class _AtlasMapState extends State<AtlasMap> {
         LatLng coords = LatLng(utm.lat, utm.lon);
         bool haveVisited = data["havePersonallyExplored"];
         data["zone"] = zone;
+        data["time"] = DateTime.now().toString();
         // add a symbol.
         String symbol = genreToSymbol["${data["Genre"]}"];
         symbol ??= 'castle-15';
@@ -138,54 +143,56 @@ class _AtlasMapState extends State<AtlasMap> {
     });
 
     // Go through all zones and add each symbol... I think in the future we will only add spots that are in the zones of the users visible region.. Not really sure
-
-    CollectionReference zones = FirebaseFirestore.instance
-        .collection("Users")
-        .doc(myId)
-        .collection("visibleZones");
-
-    QuerySnapshot allZones = await zones.get();
-    allZones.docs.forEach((doc) {
-      // call loadSymbolsOfZone to load all the symbols of the zone which is just the docId!
-
-      loadSymbolsOfZone(doc.id);
-    });
   }
 
 // Give a visible region we will convert into zones and see which zones are in between the two points.
   void getZonesInVisibleRegion() {}
 
+  void loadZones(List zones) {
+    zones.forEach((zone) {
+      loadSymbolsOfZone(zone);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-
-    return Scaffold(
-      body: MapboxMap(
-        initialCameraPosition: CameraPosition(
-            target: LatLng(widget.currentPosition.latitude,
-                widget.currentPosition.longitude),
-            zoom: 15),
-        accessToken: AtlasMap.ACCESS_TOKEN,
-        styleString: AtlasMap.STYLE,
-        myLocationEnabled: true,
-        /*onUserLocationUpdated: (location) {
+    return StreamBuilder(
+        stream: zones.snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            loadZones(snapshot.data.documents.map((DocumentSnapshot document) {
+              return document.id;
+            }).toList());
+          }
+          return Scaffold(
+            body: MapboxMap(
+              initialCameraPosition: CameraPosition(
+                  target: LatLng(widget.currentPosition.latitude,
+                      widget.currentPosition.longitude),
+                  zoom: 15),
+              accessToken: AtlasMap.ACCESS_TOKEN,
+              styleString: AtlasMap.STYLE,
+              myLocationEnabled: true,
+              /*onUserLocationUpdated: (location) {
           controller.moveCamera(CameraUpdate.newLatLng(location.position));
         },*/
-        trackCameraPosition: false,
-        compassEnabled: true,
-        onCameraIdle: () async {
-          if (controller != null) {
-            LatLngBounds region = await controller.getVisibleRegion();
-            print(
-                // Get region of viewer. Find all the zones. IF the number of zones is too high then the user is too zooomed out
-                // Don't load anything.
+              trackCameraPosition: false,
+              compassEnabled: true,
+              onCameraIdle: () async {
+                if (controller != null) {
+                  LatLngBounds region = await controller.getVisibleRegion();
+                  print(
+                      // Get region of viewer. Find all the zones. IF the number of zones is too high then the user is too zooomed out
+                      // Don't load anything.
 
-                // If the number of zones is not too high then load the zones if the zone is not in a list of "alreadyLoadedZone"
-                // add zones to alreadyLoaded Zone as we go.
-                "cameraIdle,  Camera bounds are northeast: ${region.northeast}, southwest:${region.southwest})}");
-          }
-        },
-        onMapCreated: _onMapCreated,
-      ),
-    );
+                      // If the number of zones is not too high then load the zones if the zone is not in a list of "alreadyLoadedZone"
+                      // add zones to alreadyLoaded Zone as we go.
+                      "cameraIdle,  Camera bounds are northeast: ${region.northeast}, southwest:${region.southwest})}");
+                }
+              },
+              onMapCreated: _onMapCreated,
+            ),
+          );
+        });
   }
 }

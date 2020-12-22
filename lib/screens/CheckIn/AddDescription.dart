@@ -117,11 +117,10 @@ class _AddDescriptionState extends State<AddDescription> {
       var areaSnap = await areaRef.get();
       if (!areaSnap.exists) {
         areaRef.set({"exists": true});
-        var zoneSnap = await zoneRef.get();
-        if (!zoneSnap.exists) {
-          zoneRef.set({"exists": true});
-        }
       }
+
+      // Update the users zones document so that the map knows to reload.
+      zoneRef.set({"LastUpdate": DateTime.now().toString()});
 
       return Future.value(false);
     }

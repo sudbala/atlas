@@ -55,7 +55,7 @@ class _AtlasMapState extends State<AtlasMap> {
       MaterialPageRoute<void>(
         builder: (BuildContext context) {
           // Send user to LocationScreen.
-          return LocationScreen(symbol.data["id"]);
+          return LocationScreen(symbol.data);
         },
       ),
     );
@@ -87,6 +87,7 @@ class _AtlasMapState extends State<AtlasMap> {
         .collection("Area");
 
     QuerySnapshot areaSnaps = await areas.get();
+
     // go through every area in this zone
     areaSnaps.docs.forEach((areaDoc) async {
       QuerySnapshot spotSnaps =
@@ -104,7 +105,7 @@ class _AtlasMapState extends State<AtlasMap> {
 
         LatLng coords = LatLng(utm.lat, utm.lon);
         bool haveVisited = data["havePersonallyExplored"];
-
+        data["zone"] = zone;
         // add a symbol.
         String symbol = genreToSymbol["${data["Genre"]}"];
         symbol ??= 'castle-15';
@@ -114,7 +115,8 @@ class _AtlasMapState extends State<AtlasMap> {
               coords,
               haveVisited,
             ),
-            data = {"id": "$zone/${utm.northing};${utm.easting}"});
+            // Go ahead and just send al the data!
+            data = data);
       });
     });
   }
@@ -145,6 +147,7 @@ class _AtlasMapState extends State<AtlasMap> {
     QuerySnapshot allZones = await zones.get();
     allZones.docs.forEach((doc) {
       // call loadSymbolsOfZone to load all the symbols of the zone which is just the docId!
+
       loadSymbolsOfZone(doc.id);
     });
   }
@@ -175,6 +178,11 @@ class _AtlasMapState extends State<AtlasMap> {
           if (controller != null) {
             LatLngBounds region = await controller.getVisibleRegion();
             print(
+                // Get region of viewer. Find all the zones. IF the number of zones is too high then the user is too zooomed out
+                // Don't load anything.
+
+                // If the number of zones is not too high then load the zones if the zone is not in a list of "alreadyLoadedZone"
+                // add zones to alreadyLoaded Zone as we go.
                 "cameraIdle,  Camera bounds are northeast: ${region.northeast}, southwest:${region.southwest})}");
           }
         },

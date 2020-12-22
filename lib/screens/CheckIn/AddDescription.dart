@@ -92,7 +92,7 @@ class _AddDescriptionState extends State<AddDescription> {
       }
 
       // Don't love having to read this in... Not sure i set the data structures up that well... but so far i see advantages and disadvantages to any way that I cut it...
-      String genre = ((await FirebaseFirestore.instance
+      Map spotData = ((await FirebaseFirestore.instance
               .collection("Zones")
               .doc(widget.zone)
               .collection("Area")
@@ -100,13 +100,16 @@ class _AddDescriptionState extends State<AddDescription> {
               .collection("Spots")
               .doc(widget.spotId)
               .get())
-          .data())["Genre"];
+          .data());
       spotRef.set({
         "Easting": widget.easting,
         "Northing": widget.northing,
         "FriendsWhoHaveVisited": FWHVlist,
         "havePersonallyExplored": personallyExplored,
-        "Genre": genre
+        "Genre": spotData["Genre"],
+        // Will include the name here, will allow for querying personal visible spots and less reads eventhough it will take a bit more space
+
+        "Name": spotData["Name"],
       });
 
       // I need the area and zone documents to exist for future queries. Unfortunately we need to make some extra reads here to make sure they do.

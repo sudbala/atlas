@@ -128,10 +128,15 @@ class _ValidateSpotState extends State<ValidateSpot> {
             .collection("VisitedUsers")
             .doc(myId)
             .get();
+
+        // Another read I don't love, won't have to happen if a user does a check in from their map
+        String spotName =
+            ((await areaDoc.collection("Spots").doc(closestId).get())
+                .data())["Name"];
         // If the user has already been here we will greet them with a welcome back
         if (checkInSnap.exists) {
           message = "Welcome back to";
-          return Future.value(["2", message, "$zone/$closestId"]);
+          return Future.value(["2", spotName, "$zone/$closestId"]);
         } else {
           // have the document show that the user has visited, it is there first time
           await areaDoc
@@ -142,12 +147,11 @@ class _ValidateSpotState extends State<ValidateSpot> {
               .set({"hasVisited": true});
           // If the user has never checked in here before we will greet them with a Congratulations on exploring (which is different than discovering)
           message = "Congratulations on exploring";
-          return Future.value(["1", message, "$zone/$closestId"]);
+          return Future.value(["1", spotName, "$zone/$closestId"]);
         }
       } else {
         // if we weren't too close then make a new spot!
-        return Future.value(
-            ["0", "Congratulations on discovering", "$zone/$spotId"]);
+        return Future.value(["0", "NeedToMakeName", "$zone/$spotId"]);
       }
     } else {
       // this area has no spots! lets make one.
@@ -156,14 +160,13 @@ class _ValidateSpotState extends State<ValidateSpot> {
       await areaDoc.set({"spotsInArea": new List<String>()});
 
       // return that this spot is new with a message of congratulations.
-      return Future.value(
-          ["0", "Congratulations on discovering", "$zone/$spotId"]);
+      return Future.value(["0", "NeedTOMakename", "$zone/$spotId"]);
     }
   }
 
   Future<void> _saveSpot(String title, String genre) async {
     // Set the genre , northing, easting, and title of a spot
-    // I need to switch the genre to a selection menu but i'm too lazy right now.
+
     var split = spotId.split(";");
 
     double Northing = double.parse(split[0]);
@@ -267,7 +270,7 @@ class _ValidateSpotState extends State<ValidateSpot> {
                   Navigator.of(context).pushReplacement(
                       MaterialPageRoute<void>(builder: (BuildContext context) {
                     return AddPhotos(
-                        "0", "Congratulations on discovering", "$zone/$spotId");
+                        "0", "$_nameController.text", "$zone/$spotId");
                   }));
                 },
                 child: Text(

@@ -96,6 +96,7 @@ class _ProfileScreenState extends State<ProfileScreen>
           "FriendsWhoHaveVisited": [user1],
           "havePersonallyExplored": false,
           "Genre": data["Genre"],
+          "Name": data["Name"],
         });
       }
     });

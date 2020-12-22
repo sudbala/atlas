@@ -270,7 +270,7 @@ class _ValidateSpotState extends State<ValidateSpot> {
                   Navigator.of(context).pushReplacement(
                       MaterialPageRoute<void>(builder: (BuildContext context) {
                     return AddPhotos(
-                        "0", "$_nameController.text", "$zone/$spotId");
+                        "0", "${_nameController.text}", "$zone/$spotId");
                   }));
                 },
                 child: Text(

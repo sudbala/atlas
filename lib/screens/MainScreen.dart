@@ -1,6 +1,5 @@
 import 'package:atlas/screens/ExploreScreen.dart';
 import 'package:atlas/screens/Feed.dart';
-import 'package:atlas/screens/MainMap.dart';
 import 'package:atlas/screens/ProfileScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';

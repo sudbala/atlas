@@ -67,13 +67,28 @@ class _AddDescriptionState extends State<AddDescription> {
     bool personallyExplored;
     if (spotSnap.exists) {
       // return a true in order to signify that the spot already existed!
+      // If this is you who just explored it, update to reflect that this is a spot you have personally explored
+      if (userId == myId) {
+        spotRef.update({"havePersonallyExplored": true});
+      } else {
+        // If this was a friend that just explored this place for the first time, but you alread had on your visible spots
+        // Update FriendsWhoHaveVisited to include this user who just discovered it for themselves for the first time.
+        // Remember that just because two people have mutual friends does not mean they see the same spots. You only see a spot if your immediate friend
+        // has actually discovered it.
+        spotRef.update({
+          "FriendsWhoHaveVisited": FieldValue.arrayUnion([myId])
+        });
+      }
       return Future.value(true);
     } else {
+      List FWHVlist; // FriendsWhoHaveVisited list
       // if the user didn't already have this spot in their visible spots then set it
       if (userId == myId) {
         personallyExplored = true;
+        FWHVlist = [];
       } else {
         personallyExplored = false;
+        FWHVlist = [myId];
       }
 
       // Don't love having to read this in... Not sure i set the data structures up that well... but so far i see advantages and disadvantages to any way that I cut it...
@@ -89,7 +104,7 @@ class _AddDescriptionState extends State<AddDescription> {
       spotRef.set({
         "Easting": widget.easting,
         "Northing": widget.northing,
-        "FriendsWhoHaveVisited": [],
+        "FriendsWhoHaveVisited": FWHVlist,
         "havePersonallyExplored": personallyExplored,
         "Genre": genre
       });
@@ -111,17 +126,17 @@ class _AddDescriptionState extends State<AddDescription> {
     // If they don't then add it
   }
 
-  void updateFriendsVisibleSpots() {
+  void updateFriendsVisibleSpots() async {
     // anytime a user discovers or explores a spot (creationid 0 or 1), we need to update all their friend's visble spots to show that this user has explored those spots
 
-    // GO through all friends of this user
-
-    // We can use addToVisibleSpots.
-    // if the friend already had this spot as a visible one then just update the "FriendsWhoHaveVisited" array by adding this user id
-
-    // if the friend did not already have this spot as a visible one, then create it as a spot in their collection and add this user id to FriendsWhoHaveVisited
-
-    // This spot will now show up on this user's map, very exciting!
+    // GO through all friends of this user and call addToVisibleSpots
+    Map friends = (await userDoc.get()).data()["Friends"];
+    friends.keys.forEach((friendId) {
+      if (friends[friendId] == 2) {
+        print(friendId);
+        addToVisibleSpots(friendId);
+      }
+    });
   }
 
   @override
@@ -143,6 +158,7 @@ class _AddDescriptionState extends State<AddDescription> {
                 if (widget.creationId != "2") {
                   addToExploredSpots();
                   addToVisibleSpots(myId);
+                  updateFriendsVisibleSpots();
                 }
 
                 Navigator.of(context).pushReplacement(

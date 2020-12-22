@@ -245,7 +245,7 @@ class InputNameField extends StatelessWidget {
               ),
               Container(
                 child: TextField(
-                  inputFormatters: [LengthLimitingTextInputFormatter(100)],
+                  inputFormatters: [LengthLimitingTextInputFormatter(70)],
                   controller: _bioController,
                   decoration: InputDecoration(
                       border: new OutlineInputBorder(

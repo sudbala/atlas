@@ -78,11 +78,14 @@ class _ProfileSetupState extends State<ProfileSetup> {
       UploadProfilePicture(),
     ];
 
-    // Create the user with an empty array of ExploredSpots
-    FirebaseFirestore.instance
-        .collection('Users')
-        .doc(myId)
-        .set({"ExploredSpots": []});
+    // Create the user with an empty array of ExploredSpots and empty map of Friends and an initial photo in case the user never sets one or is not updated in time.
+    FirebaseFirestore.instance.collection('Users').doc(myId).set({
+      "ExploredSpots": [],
+      "Friends": {},
+      "profileURL":
+          "https://firebasestorage.googleapis.com/v0/b/atlas-8b3b8.appspot.com/o/blankProfile.png?alt=media&token=8ffc6a2d-6e08-499a-b2cf-0f250a8b0f8f"
+    });
+
     super.initState();
   }
 

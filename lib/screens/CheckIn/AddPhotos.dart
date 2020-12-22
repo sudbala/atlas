@@ -8,10 +8,11 @@ final User currentUser = _auth.currentUser;
 final String myId = currentUser.uid;
 
 class AddPhotos extends StatefulWidget {
+  CollectionReference zones = FirebaseFirestore.instance.collection("Zones");
   // Creation Id tells us whether this spot is discovered, explored, or returned to for later reference
   String creationId;
   // Title for now is the text that is displayed on this widget
-  String title;
+  String spotName;
 
 // Full id has the zone and the full northing and easting
   String fullId;
@@ -23,10 +24,11 @@ class AddPhotos extends StatefulWidget {
   String area;
 
   String checkInId;
-  AddPhotos(String creationId, String title, String fullId) {
+  String message;
+  AddPhotos(String creationId, String spotName, String fullId) {
     this.creationId = creationId;
     this.fullId = fullId;
-    this.title = title;
+
     var split = (fullId.split("/"));
 
     this.zone = split[0];
@@ -35,6 +37,15 @@ class AddPhotos extends StatefulWidget {
     this.area =
         "${areaSplit[0].substring(0, 3)};${areaSplit[1].substring(0, 2)}";
     this.checkInId = DateTime.now().toString();
+
+    this.spotName = spotName;
+    if (creationId == "0") {
+      this.message = "Congratulations on discovering";
+    } else if (creationId == "1") {
+      this.message = "Congratulations on exploring";
+    } else if (creationId == "2") {
+      this.message = "Welcome back to";
+    }
   }
 
   @override
@@ -43,9 +54,7 @@ class AddPhotos extends StatefulWidget {
 
 class _AddPhotosState extends State<AddPhotos> {
   void createCheckIn() {
-    CollectionReference zones = FirebaseFirestore.instance.collection("Zones");
-
-    DocumentReference checkInDoc = zones
+    DocumentReference checkInDoc = widget.zones
         .doc(widget.zone)
         .collection("Area")
         .doc(widget.area)
@@ -61,7 +70,7 @@ class _AddPhotosState extends State<AddPhotos> {
       "Date": DateTime.now().toString(),
       "message": "",
       "title": "Check In",
-      "PhotoUrls": null
+      "PhotoUrls": null,
     });
   }
 
@@ -74,8 +83,8 @@ class _AddPhotosState extends State<AddPhotos> {
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Text("${widget.title}"),
-          Text("${widget.spotId}"),
+          Text("${widget.message}"),
+          Text("${widget.spotName}"),
           Text("Lets Add some Photos to this Check In"),
           ElevatedButton(
               child: Text("Skip"),

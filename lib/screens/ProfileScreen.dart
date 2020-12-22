@@ -1,94 +1,12 @@
-import 'dart:io';
 import 'package:atlas/screens/SettingsScreen.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 final FirebaseAuth _auth = FirebaseAuth.instance;
 final User currentUser = _auth.currentUser;
 final String myId = currentUser.uid;
-
-final firestoreInstance = FirebaseFirestore.instance;
-
-class ProfileButton extends StatefulWidget {
-  final int relationShipToProfile;
-
-  ProfileButton(this.relationShipToProfile);
-
-  @override
-  _ProfileButtonState createState() => _ProfileButtonState();
-}
-
-class _ProfileButtonState extends State<ProfileButton> {
-  @override
-  Widget build(BuildContext context) {
-    if (widget.relationShipToProfile == 3) {
-      return IconButton(
-        icon: Icon(Icons.settings),
-        onPressed: () => {
-          Navigator.of(context)
-              .push(MaterialPageRoute<void>(builder: (BuildContext context) {
-            return SettingsScreen();
-          }))
-        },
-      );
-    } else {
-      //  Case when viewing someone else's profile page
-      String buttonText;
-      if (widget.relationShipToProfile == 2) {
-        buttonText = "Friends";
-      } else if (widget.relationShipToProfile == 1) {
-        buttonText = "Accept Friend";
-      } else {
-        buttonText = "Requested";
-      }
-
-      return ElevatedButton(
-          onPressed: () => {setState(() {})}, child: Text(buttonText));
-    }
-  }
-}
-
-class ProfileHeader extends StatelessWidget {
-  final String profileID;
-  ProfileHeader(this.profileID);
-  Widget build(BuildContext context) {
-    // Initial UserName before we get data can be loading?
-    String UserName = "Loading";
-    // Initial Image should probably be a file loaded on phone eventually
-    String imageURL =
-        "https://firebasestorage.googleapis.com/v0/b/atlas-8b3b8.appspot.com/o/blankProfile.png?alt=media&token=8ffc6a2d-6e08-499a-b2cf-0f250a8b0f8f";
-
-    // grab collection of users
-    CollectionReference users = FirebaseFirestore.instance.collection("Users");
-    // here we will create a future builder.
-    return FutureBuilder<DocumentSnapshot>(
-        future: users.doc(profileID).get()
-          ..then((value) {
-            // If we are able to find a setup Profile for this profile Id, set up the usernamme and profile photo
-            UserName = value['UserName'];
-            imageURL = value['profileURL'];
-          }),
-        builder:
-            (BuildContext context, AsyncSnapshot<DocumentSnapshot> snapshot) {
-          //Map<String, dynamic> data = snapshot.data.data();
-          // Build the actual profile here. It will rebuild again once the future returns
-          return SafeArea(
-              child: Column(children: [
-            Expanded(
-              child: (Row(children: <Widget>[
-                Text("$UserName"),
-                (Expanded(child: Image.network("$imageURL")))
-              ])),
-            ),
-            SizedBox(height: 50)
-          ]));
-
-          //return Text("James Fleming");
-        });
-  }
-}
 
 class ProfileScreen extends StatefulWidget {
   final String profileID;
@@ -102,127 +20,278 @@ class _ProfileScreenState extends State<ProfileScreen>
     with SingleTickerProviderStateMixin {
   // A little bit of code to setup a tabController;
   TabController tController;
+  CollectionReference users = FirebaseFirestore.instance.collection("Users");
   // Here we would call to the FireStore database to actually get information on the profile
 
   // Example Check in's just to see what having a list as one of the tabs feels like.
   final List<String> checkInExample =
       List.generate(50, (index) => "Check In $index");
+
   @override
   void initState() {
     super.initState();
     tController = TabController(length: 3, vsync: this);
   }
 
+  int relationShipToProfile;
+  List exploredPlaces;
+
+// Set the profile id's
+  void setProfiles(int other, int me) {
+    users.doc(widget.profileID).update({"Friends.$myId": other});
+    users.doc(myId).update({"Friends.${widget.profileID}": me});
+  }
+
+  void updateUsersVisibleSpots(String user1, String user2, List user1Explored) {
+    user1Explored.forEach((fullSpotId) async {
+      var split = fullSpotId.split("/");
+      String zone = split[0];
+      String spotId = split[1];
+      var splitId = spotId.split(";");
+      String area =
+          "${splitId[0].substring(0, 3)};${splitId[1].substring(0, 2)}";
+
+      DocumentReference zoneRef = FirebaseFirestore.instance
+          .collection("Users")
+          .doc(user2)
+          .collection("visibleZones")
+          .doc(zone);
+      DocumentReference areaRef = zoneRef.collection("Area").doc(area);
+      DocumentReference spotRef = areaRef.collection("Spots").doc(spotId);
+
+      DocumentSnapshot spotShot = await spotRef.get();
+
+      if (spotShot.exists) {
+        // If the spot was already in the other user's visible regions just add this friend as someone who has visited. THeir checkins will now show up for this spot
+        spotRef.update({
+          "FriendsWhoHaveVisited": FieldValue.arrayUnion([user1])
+        });
+      } else {
+        // We need to add this spot into other users visible area.
+
+        // Make sure this area exits and the zone exits! This need to exist for querying later so create them if they don't
+        var areaSnap = await areaRef.get();
+        if (!areaSnap.exists) {
+          areaRef.set({"exists": true});
+          var zoneSnap = await zoneRef.get();
+          if (!zoneSnap.exists) {
+            zoneRef.set({"exists": true});
+          }
+        }
+
+        // Add this spot from our databases of spots!
+
+        Map data = ((await FirebaseFirestore.instance
+                .collection("Zones")
+                .doc(zone)
+                .collection("Area")
+                .doc(area)
+                .collection("Spots")
+                .doc(spotId)
+                .get())
+            .data());
+        spotRef.set({
+          "Easting": data["Easting"].toString(),
+          "Northing": data["Northing"].toString(),
+          "FriendsWhoHaveVisited": [user1],
+          "havePersonallyExplored": false,
+          "Genre": data["Genre"],
+        });
+      }
+    });
+  }
+
+  void becomeFriends(String otherProfileId, List exploredPlacesOther) async {
+    // Grab user1s list of explored places for myId, we already have the other profile's
+    DocumentSnapshot myProfile = await users.doc(myId).get();
+    List myExploredSpots = myProfile.data()["ExploredSpots"];
+
+    // Go through all of my explored spots and add them to otherProfileId visibleZones.
+    updateUsersVisibleSpots(myId, otherProfileId, myExploredSpots);
+    updateUsersVisibleSpots(otherProfileId, myId, exploredPlacesOther);
+  }
+
+  Widget profileButton() {
+    if (relationShipToProfile == 3) {
+      return IconButton(
+        icon: Icon(Icons.settings),
+        onPressed: () => {
+          Navigator.of(context)
+              .push(MaterialPageRoute<void>(builder: (BuildContext context) {
+            return SettingsScreen();
+          }))
+        },
+      );
+    } else {
+      //  Case when viewing someone else's profile page
+      String buttonText;
+      double scale;
+      if (relationShipToProfile == 2) {
+        buttonText = "Friends";
+        scale = 1;
+      } else if (relationShipToProfile == 1) {
+        buttonText = "Accept";
+        scale = 1;
+      } else if (relationShipToProfile == 4) {
+        buttonText = "Requested";
+        scale = 0.8;
+      } else if (relationShipToProfile == 0) {
+        buttonText = "Add";
+        scale = 1.2;
+      }
+
+      return ElevatedButton(
+          onPressed: () => {
+                if (relationShipToProfile == 1)
+                  {
+                    setProfiles(2, 2),
+                    becomeFriends(widget.profileID, exploredPlaces)
+                  }
+                // This means we just became friends. So we have to update each other's visibleSpot collection such that user1 has all of user2 explore spots. and vice versa.
+
+                else if (relationShipToProfile == 0)
+                  // Set other profile to 4 so I see requested. Set my profile to 1 so they see Accept Friend
+                  {setProfiles(4, 1)}
+              },
+          child: Text(buttonText, textScaleFactor: scale));
+    }
+  }
+
+  Widget profileHeader(double height, double width, String userName,
+      String name, String imageUrl, String bio, int relationShip) {
+    return Column(children: [
+      //FittedBox(fit: BoxFit.fitWidth, child: Center(child: Text("$userName"))),
+      SizedBox(
+        height: height - 112,
+        width: double.infinity,
+        child: Image.network("$imageUrl", fit: BoxFit.cover),
+      ),
+      SizedBox(height: 5),
+      SizedBox(
+          height: 100,
+          child: Row(children: [
+            SizedBox(
+                width: width * (3 / 4),
+                child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 15),
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(userName,
+                              textAlign: TextAlign.left,
+                              style: GoogleFonts.ebGaramond(
+                                  textStyle: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold))),
+                          Text(name,
+                              style: GoogleFonts.andika(
+                                  textStyle: TextStyle(
+                                color: Colors.white,
+                              ))),
+                          Text(bio,
+                              style: GoogleFonts.andika(
+                                  textStyle: TextStyle(
+                                color: Colors.white,
+                              )))
+                        ]))),
+            SizedBox(width: width / 4, child: Center(child: profileButton())),
+          ])),
+      SizedBox(height: 7),
+    ]);
+  }
+
   @override
   Widget build(BuildContext context) {
     // Profile Height is currently set to 3/5 of user's screen
     double profileHeight = MediaQuery.of(context).size.height * (3 / 5);
-    int relationShipToProfile =
-        -1; // this will be to represent two users that are not friends
+    double screenWidth = MediaQuery.of(context).size.width;
 
-    if (widget.profileID == myId) {
-      relationShipToProfile = 3;
-    } else {
-      // Grab RelationShip to profile from firestore
-      relationShipToProfile = 2;
-    }
+    return StreamBuilder(
+        stream: users.doc(widget.profileID).snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            String userName = snapshot.data["UserName"];
+            String name = snapshot.data["Name"];
+            String bio = snapshot.data["Bio"];
+            String profileUrl = snapshot.data["profileURL"];
+            exploredPlaces = snapshot.data["ExploredSpots"];
 
-    return Scaffold(
-        // We will use a NestedScrollView so that we can have a sliverAppBar with a Tab bar to differentiate between
-        // The different pages of a user's profile.
-        body: NestedScrollView(
-      floatHeaderSlivers: true,
-      headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
-        return [
-          // Create a persistent header. This is where we put the actual profile stuff
-          SliverAppBar(
-            // Whether the par becomes pinned at the top or not
-            pinned: true,
-            // Whether part of the appbar is always there
-            floating: true,
-            snap: true,
-            expandedHeight: profileHeight,
+            if (widget.profileID == myId) {
+              relationShipToProfile = 3;
+            } else {
+              // Grab RelationShip to profile from firestore
+              relationShipToProfile = (snapshot.data["Friends"])[myId];
 
-            flexibleSpace: FlexibleSpaceBar(
-              background: ProfileHeader(widget.profileID),
-            ),
-            bottom: TabBar(
-              tabs: [
-                Tab(text: "Check Ins"),
-                Tab(text: "Favorite Places"),
-                Tab(text: "HeatMap")
-              ],
-              controller: tController,
-              //labelColor: Colors.blue,
-            ),
-            actions: <Widget>[ProfileButton(relationShipToProfile)],
-          ),
+              // if there was no data there then assign it to 0
+              relationShipToProfile ??= 0;
+            }
 
-          /*
-          SliverPersistentHeader(
-              delegate: CustomSliverDelegate(
-                expandedHeight: 120,
+            return Scaffold(
+                // We will use a NestedScrollView so that we can have a sliverAppBar with a Tab bar to differentiate between
+                // The different pages of a user's profile.
+                body: NestedScrollView(
+              floatHeaderSlivers: true,
+              headerSliverBuilder:
+                  (BuildContext context, bool innerBoxIsScrolled) {
+                return [
+                  // Create a persistent header. This is where we put the actual profile stuff
+                  SliverAppBar(
+                    // Whether the par becomes pinned at the top or not
+                    pinned: true,
+                    // Whether part of the appbar is always there
+                    floating: true,
+                    snap: true,
+                    expandedHeight: profileHeight,
+
+                    flexibleSpace: FlexibleSpaceBar(
+                      background: profileHeader(
+                          profileHeight,
+                          screenWidth,
+                          userName,
+                          name,
+                          profileUrl,
+                          bio,
+                          relationShipToProfile),
+                    ),
+                    bottom: TabBar(
+                      tabs: [
+                        Tab(
+                          icon: Icon(Icons.rate_review_rounded),
+                        ),
+                        Tab(
+                          icon: Icon(Icons.favorite_border_rounded),
+                        ),
+                        Tab(icon: Icon(Icons.map))
+                      ],
+                      controller: tController,
+                      //labelColor: Colors.blue,
+                    ),
+                  ),
+                ];
+              },
+              // The bulk of a users view.
+              body: TabBarView(
+                children: [
+                  ListView.builder(
+                    itemCount: checkInExample.length,
+                    itemBuilder: (context, index) {
+                      return ListTile(
+                        title: Text(
+                          checkInExample[index],
+                        ),
+                      );
+                    },
+                  ),
+                  Text("Put a list of all favorite places"),
+                  Text("Put a user's heatmap here"),
+                ],
+                controller: tController,
               ),
-              pinned: true,
-              floating: true),
-          // Create the app Bar here
-          */
-        ];
-      },
-      // The bulk of a users view.
-      body: TabBarView(
-        children: [
-          ListView.builder(
-            itemCount: checkInExample.length,
-            itemBuilder: (context, index) {
-              return ListTile(
-                title: Text(
-                  checkInExample[index],
-                ),
-              );
-            },
-          ),
-          Text("Put a list of all favorite places"),
-          Text("Put a user's heatmap here"),
-        ],
-        controller: tController,
-      ),
-    ));
-  }
-}
-
-/// NONE OF THIS IS IN use right now.. Provides alternative way to doing things.
-class CustomSliverDelegate extends SliverPersistentHeaderDelegate {
-  final double expandedHeight;
-  final bool hideTitleWhenExpanded;
-  //final TabBar tabBar;
-  CustomSliverDelegate({
-    @required this.expandedHeight,
-    //@required this.tabBar,
-    this.hideTitleWhenExpanded = true,
-  });
-
-  @override
-  Widget build(
-      BuildContext context, double shrinkOffset, bool overlapsContent) {
-    final appBarSize = expandedHeight - shrinkOffset;
-    final proportion = 2 - (expandedHeight / appBarSize);
-    final percent = proportion < 0 || proportion > 1 ? 0.0 : proportion;
-    return Opacity(
-      child: ProfileHeader("Test"),
-      opacity: hideTitleWhenExpanded ? percent : 1.0 - percent,
-    );
-
-    //return SafeArea(child: tabBar);
-  }
-
-  @override
-  double get maxExtent => expandedHeight + expandedHeight / 2;
-
-  @override
-  double get minExtent => kToolbarHeight;
-  @override
-  bool shouldRebuild(SliverPersistentHeaderDelegate oldDelegate) {
-    return true;
+            ));
+          } else {
+            return Container(child: Center(child: CircularProgressIndicator()));
+          }
+        });
   }
 }

@@ -89,7 +89,7 @@ class _SelectSpotState extends State<SelectSpot> {
                 title: FittedBox(
                     fit: BoxFit.fitWidth,
                     child: Center(
-                        child: Text("Tap and Hold on a Location",
+                        child: Text("Tap on a Location!",
                             style: GoogleFonts.ebGaramond()))),
               ),
               body: MapboxMap(

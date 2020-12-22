@@ -31,8 +31,7 @@ class ValidateSpot extends StatefulWidget {
 class _ValidateSpotState extends State<ValidateSpot> {
   bool userHasBeen = false;
 
-  double minDistance =
-      200; // meters about 2 football fields. can be played with
+  double minDistance = 120; // meters
 
   CollectionReference zones = FirebaseFirestore.instance.collection("Zones");
 

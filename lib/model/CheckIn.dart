@@ -12,10 +12,10 @@ class CheckIn {
   }
 
   /// The url for the location of photos in the database
-  String photosURL;
-  String get url => photosURL;
-  set url(String url) {
-    this.photosURL = url;
+  List<String> photoURLs;
+  List<String> get url => photoURLs;
+  set url(List<String> url) {
+    this.photoURLs = url;
   }
 
   /// The description for a check in from the database
@@ -42,7 +42,7 @@ class CheckIn {
   CheckIn(
       {this.checkInTitle,
       this.checkInDescription,
-      this.photosURL,
+      this.photoURLs,
       this.checkInID,
       this.checkInDate});
 

@@ -1,4 +1,7 @@
+import 'dart:collection';
+
 import 'package:atlas/model/CheckIn.dart';
+import 'package:atlas/screens/CheckIn/CheckInPost.dart';
 import 'package:atlas/screens/SettingsScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -30,12 +33,14 @@ class _ProfileScreenState extends State<ProfileScreen>
       List.generate(50, (index) => "Check In $index");
 
   List<CheckIn> checkIns;
+  Set<String> checkInIds;
 
   @override
   void initState() {
     super.initState();
     tController = TabController(length: 3, vsync: this);
     checkIns = List();
+    checkInIds = HashSet();
   }
 
   int relationShipToProfile;
@@ -138,7 +143,7 @@ class _ProfileScreenState extends State<ProfileScreen>
           "${splitId[0].substring(0, 3)};${splitId[1].substring(0, 2)}";
 
       /// With all the parsed data, let's get the associated snapshot stream
-      Stream<QuerySnapshot> stream =  FirebaseFirestore.instance
+      Stream<QuerySnapshot> stream = FirebaseFirestore.instance
           .collection('Zones')
           .doc(zone)
           .collection('Area')
@@ -147,14 +152,14 @@ class _ProfileScreenState extends State<ProfileScreen>
           .doc(spotId)
           .collection('VisitedUsers')
           .doc(widget.profileID)
-          .collection('CheckIns').snapshots();
+          .collection('CheckIns')
+          .snapshots();
 
       /// Once we get the stream, we add it to the list of streams that we will
       /// zip up into one stream when we return
       checkInStreams.add(stream);
     }
     return StreamZip(checkInStreams);
-
   }
 
   Widget profileButton() {
@@ -323,18 +328,25 @@ class _ProfileScreenState extends State<ProfileScreen>
                       stream: checkInStream(exploredPlaces),
                       builder: (context, snapshot) {
                         if (snapshot.hasData) {
-                          List<QuerySnapshot> checkInCollections = snapshot.data.toList();
-                          for (QuerySnapshot areaCheckIns in checkInCollections) {
-                            for (QueryDocumentSnapshot checkIn in areaCheckIns.docs) {
-                              checkIns.add(
-                                  CheckIn(
-                                    checkInTitle: checkIn['title'],
-                                    checkInDescription: checkIn['message'],
-                                    photosURL: checkIn['PhotoUrls'],
-                                    checkInDate: checkIn['Date'],
-                                    checkInID: checkIn.id,
-                                  )
-                              );
+                          List<QuerySnapshot> checkInCollections =
+                              snapshot.data.toList();
+                          for (QuerySnapshot areaCheckIns
+                              in checkInCollections) {
+                            for (QueryDocumentSnapshot checkIn
+                                in areaCheckIns.docs) {
+                              /// BAD FIX, but for now it works
+                              /// TODO: Make it so that we don't need a set?
+                              if (!checkInIds.contains(checkIn.id)) {
+                                checkIns.add(CheckIn(
+                                  checkInTitle: checkIn['title'],
+                                  checkInDescription: checkIn['message'],
+                                  photoURLs:
+                                      List<String>.from(checkIn['PhotoUrls']),
+                                  checkInDate: checkIn['Date'],
+                                  checkInID: checkIn.id,
+                                ));
+                                checkInIds.add(checkIn.id);
+                              }
                             }
                           }
                         }
@@ -342,6 +354,19 @@ class _ProfileScreenState extends State<ProfileScreen>
                           itemCount: checkIns.length,
                           itemBuilder: (context, index) {
                             return ListTile(
+                              onTap: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute<void>(
+                                    builder: (BuildContext context) {
+                                      /// Return the associated checkIn
+                                      return CheckInPost(
+                                        checkIn: checkIns[index],
+                                        userName: userName,
+                                      );
+                                    },
+                                  ),
+                                );
+                              },
                               title: Text(
                                 checkIns[index].checkInTitle,
                               ),

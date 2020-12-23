@@ -368,7 +368,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                                 );
                               },
                               title: Text(
-                                checkIns[index].checkInTitle,
+                                "Check In: " + checkIns[index].checkInTitle,
                               ),
                             );
                           },

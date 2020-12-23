@@ -1,10 +1,18 @@
 import 'package:atlas/model/CheckIn.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:flutter_swiper/flutter_swiper.dart';
 import 'package:flutter_page_indicator/flutter_page_indicator.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:geolocator/geolocator.dart';
+
+import '../LocationScreen.dart';
+
+final FirebaseAuth _auth = FirebaseAuth.instance;
+final User currentUser = _auth.currentUser;
+final String myId = currentUser.uid;
 
 /// The view of a [CheckInPost]. This widget will be used in various places
 class CheckInPost extends StatefulWidget {
@@ -188,7 +196,7 @@ class RoundClipper extends CustomClipper<Path> {
 class CheckInContent extends StatelessWidget {
   /// These are the instance variables for the [CheckInContent]
   final String checkInID, checkInTitle, description, userName;
-  String spotName;
+  String spotName, zone, area, spotID;
   String timeAgo;
 
   CheckInContent({
@@ -199,6 +207,9 @@ class CheckInContent extends StatelessWidget {
     @required this.userName,
 })  : super(key: key) {
     var splitID = checkInID.split(";");
+    zone = splitID[0];
+    area = splitID[1].substring(0,3) + ";" + splitID[2].substring(0,2);
+    spotID = splitID[1] + ";" + splitID[2];
     spotName = splitID[3];
 
     /// Getting how long ago it was posted
@@ -224,6 +235,33 @@ class CheckInContent extends StatelessWidget {
     /// Create a new Date time with it
     DateTime postDate = DateTime(year, month, day, hour, minute, second, millisecond, microsecond);
     timeAgo = timeago.format(postDate);
+
+  }
+
+  void _onLocationPressed(context) async {
+    /// Here we go to the respective spot page by reading it from the db.
+    /// May be an unnecessary read, we'll have to talk about this later on...
+    DocumentSnapshot currentSpot = await FirebaseFirestore.instance.collection('Users')
+        .doc(myId)
+        .collection('visibleZones')
+        .doc(zone)
+        .collection('Area')
+        .doc(area)
+        .collection('Spots')
+        .doc(spotID)
+        .get();
+
+    var data = currentSpot.data();
+
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (BuildContext context) {
+          // Send user to LocationScreen.
+          return LocationScreen(data);
+        },
+      ),
+    );
+
 
   }
 
@@ -258,12 +296,17 @@ class CheckInContent extends StatelessWidget {
                 ),
                 SizedBox(width: 5),
                 Flexible(
-                  child: Text(
-                    userName + " checked into " + spotName + " " + timeAgo,
-                    style: TextStyle(
-                      fontSize: size.width * 0.035,
-                      color: Colors.black.withOpacity(0.5),
+                  child: TextButton(
+                    child: Text(
+                      userName + " checked into " + spotName + " " + timeAgo,
+                      style: TextStyle(
+                        fontSize: size.width * 0.035,
+                        color: Colors.black.withOpacity(0.5),
+                      ),
                     ),
+                    onPressed: () {
+                      _onLocationPressed(context);
+                    },
                   ),
                 )
               ],

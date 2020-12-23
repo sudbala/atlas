@@ -36,7 +36,8 @@ class AddPhotos extends StatefulWidget {
     var areaSplit = this.spotId.split(";");
     this.area =
         "${areaSplit[0].substring(0, 3)};${areaSplit[1].substring(0, 2)}";
-    this.checkInId = DateTime.now().toString();
+    this.checkInId =
+        zone + ";" + spotId + ";" + spotName + ";" + DateTime.now().toString();
 
     this.spotName = spotName;
     if (creationId == "0") {

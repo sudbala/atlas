@@ -78,10 +78,6 @@ class _ProfileScreenState extends State<ProfileScreen>
         var areaSnap = await areaRef.get();
         if (!areaSnap.exists) {
           areaRef.set({"exists": true});
-          var zoneSnap = await zoneRef.get();
-          if (!zoneSnap.exists) {
-            zoneRef.set({"exists": true});
-          }
         }
 
         // Add this spot from our databases of spots!
@@ -103,6 +99,9 @@ class _ProfileScreenState extends State<ProfileScreen>
           "Genre": data["Genre"],
           "Name": data["Name"],
         });
+
+        // Update the users zones document so that the map knows to reload.
+        zoneRef.set({"LastUpdate": DateTime.now().toString()});
       }
     });
   }

@@ -1,8 +1,10 @@
+import 'package:atlas/model/CheckIn.dart';
 import 'package:atlas/screens/SettingsScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:async/async.dart';
 
 final FirebaseAuth _auth = FirebaseAuth.instance;
 final User currentUser = _auth.currentUser;
@@ -27,10 +29,13 @@ class _ProfileScreenState extends State<ProfileScreen>
   final List<String> checkInExample =
       List.generate(50, (index) => "Check In $index");
 
+  List<CheckIn> checkIns;
+
   @override
   void initState() {
     super.initState();
     tController = TabController(length: 3, vsync: this);
+    checkIns = List();
   }
 
   int relationShipToProfile;
@@ -110,6 +115,47 @@ class _ProfileScreenState extends State<ProfileScreen>
     // Go through all of my explored spots and add them to otherProfileId visibleZones.
     updateUsersVisibleSpots(myId, otherProfileId, myExploredSpots);
     updateUsersVisibleSpots(otherProfileId, myId, exploredPlacesOther);
+  }
+
+  Stream<List<QuerySnapshot>> checkInStream(List<dynamic> explored) {
+    /// This method takes in the explored places for a given user and loads their
+    /// associated checkIns with each. This seems a little tedious atm...
+
+    /// Let's start with just making a for-each loop with the explored places.
+    /// From here, we will do a read for each place we have checked in. Should
+    /// be O(n) time because each read should be O(1)
+    List<Stream<QuerySnapshot>> checkInStreams = List();
+    print('WE GOT HERE #1');
+    print('MY EXPLORED PLACES: ' + explored.toString());
+    for (String fullSpotID in explored) {
+      //print(fullSpotID);
+      /// In order to get the collection reference for checkIns, we need to parse
+      /// the current spotID. Was lazy, took from above lol
+      var split = fullSpotID.split("/");
+      String zone = split[0];
+      String spotId = split[1];
+      var splitId = spotId.split(";");
+      String area =
+          "${splitId[0].substring(0, 3)};${splitId[1].substring(0, 2)}";
+
+      /// With all the parsed data, let's get the associated snapshot stream
+      Stream<QuerySnapshot> stream =  FirebaseFirestore.instance
+          .collection('Zones')
+          .doc(zone)
+          .collection('Area')
+          .doc(area)
+          .collection('Spots')
+          .doc(spotId)
+          .collection('VisitedUsers')
+          .doc(widget.profileID)
+          .collection('CheckIns').snapshots();
+
+      /// Once we get the stream, we add it to the list of streams that we will
+      /// zip up into one stream when we return
+      checkInStreams.add(stream);
+    }
+    return StreamZip(checkInStreams);
+
   }
 
   Widget profileButton() {
@@ -274,16 +320,36 @@ class _ProfileScreenState extends State<ProfileScreen>
               // The bulk of a users view.
               body: TabBarView(
                 children: [
-                  ListView.builder(
-                    itemCount: checkInExample.length,
-                    itemBuilder: (context, index) {
-                      return ListTile(
-                        title: Text(
-                          checkInExample[index],
-                        ),
-                      );
-                    },
-                  ),
+                  StreamBuilder(
+                      stream: checkInStream(exploredPlaces),
+                      builder: (context, snapshot) {
+                        if (snapshot.hasData) {
+                          List<QuerySnapshot> checkInCollections = snapshot.data.toList();
+                          for (QuerySnapshot areaCheckIns in checkInCollections) {
+                            for (QueryDocumentSnapshot checkIn in areaCheckIns.docs) {
+                              checkIns.add(
+                                  CheckIn(
+                                    checkInTitle: checkIn['title'],
+                                    checkInDescription: checkIn['message'],
+                                    photosURL: checkIn['PhotoUrls'],
+                                    checkInDate: checkIn['Date'],
+                                    checkInID: checkIn.id,
+                                  )
+                              );
+                            }
+                          }
+                        }
+                        return ListView.builder(
+                          itemCount: checkIns.length,
+                          itemBuilder: (context, index) {
+                            return ListTile(
+                              title: Text(
+                                checkIns[index].checkInTitle,
+                              ),
+                            );
+                          },
+                        );
+                      }),
                   Text("Put a list of all favorite places"),
                   Text("Put a user's heatmap here"),
                 ],

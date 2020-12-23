@@ -48,6 +48,7 @@ dependencies:
   utm: ^0.1.2
   geolocator: ^6.1.13
   searchable_dropdown: ^1.1.3
+  flutter_svg: ^0.19.1
   
   
   
@@ -82,6 +83,7 @@ flutter:
     - images/landscape.jpg
     - images/boRidge.JPG
     - images/location.png
+    - assets/heart.svg
     
 
 

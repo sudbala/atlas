@@ -1,4 +1,3 @@
-
 /// Class to hold a [CheckIn]. Has a title, url for photos, a description,
 /// a check-in ID, and more information to come
 class CheckIn {
@@ -33,7 +32,23 @@ class CheckIn {
     this.checkInTitle = title;
   }
 
+  String checkInDate;
+  String get date => checkInDate;
+  set date(String date) {
+    this.checkInDate = date;
+  }
+
   /// Constructor
-  CheckIn({this.checkInTitle, this.checkInDescription, this.photosURL, this.checkInID});
+  CheckIn(
+      {this.checkInTitle,
+      this.checkInDescription,
+      this.photosURL,
+      this.checkInID,
+      this.checkInDate});
+
+  String toString() {
+    return checkInTitle + " on " + checkInDate;
+  }
+
 
 }

@@ -1,7 +1,13 @@
+import 'dart:io';
+
 import 'package:atlas/screens/CheckIn/AddDescription.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_absolute_path/flutter_absolute_path.dart';
+import 'package:multi_image_picker/multi_image_picker.dart';
 
 final FirebaseAuth _auth = FirebaseAuth.instance;
 final User currentUser = _auth.currentUser;
@@ -54,8 +60,94 @@ class AddPhotos extends StatefulWidget {
 }
 
 class _AddPhotosState extends State<AddPhotos> {
+  List<Asset> _images = [];
+  List files = [];
+  List<Asset> resultList;
+  double widgetHeight;
+  DocumentReference checkInDoc;
+// Load the images
+  Future<void> loadAssets() async {
+    try {
+      resultList = await MultiImagePicker.pickImages(
+          maxImages: 6, selectedAssets: _images);
+    } on Exception catch (e) {
+      print(e.toString());
+    }
+    if (!mounted) return;
+
+    setState(() {
+      _images = resultList;
+      mainWidget = listOfPhotos();
+    });
+  }
+
+  /// Method to save a photo to the Firebase Storage stole this from sudharsan's profile setup up. Should combine if we ever decide to user libraries or something idk
+  Future<String> uploadFile(File file) async {
+    String returnURL;
+    Reference storageReference = FirebaseStorage.instance
+        .ref()
+        .child('checkInPhotos/$myId;${DateTime.now().toString()}');
+
+    /// Get the storage reference of where the image will go, then use an
+    /// upload task to put upload it there. Upon completion, we get URL
+    UploadTask uploadTask = storageReference.putFile(file);
+    await uploadTask.whenComplete(() async {
+      print('File Uploaded');
+      await storageReference.getDownloadURL().then((value) {
+        returnURL = value;
+      });
+    });
+
+    return returnURL;
+  }
+
+  Future _savePhotos() async {
+    /// Need to save a blank profile if we don't have a profile image
+    /// First, let's decide what our url will be. If not a blank, we need to
+    /// upload to firebase storage and grab that url. Otherwise, hardcoded blank
+    /// url.
+    ///
+    List<String> photoUrls = new List<String>();
+// can't use for each here... learned this the hard way.
+    for (var image in _images) {
+      // Convert the asset into a file
+      File file =
+          File(await FlutterAbsolutePath.getAbsolutePath(image.identifier));
+      String photoUrl = await uploadFile(file);
+      print(photoUrl);
+
+      photoUrls.add(photoUrl);
+    }
+
+    /// Now we just update our storage in [Firestore]
+    ///
+
+    await checkInDoc.update({'PhotoUrls': photoUrls});
+  }
+
+// Create a list of the photos that we will see as a preview of our post!
+  Widget listOfPhotos() {
+    return SizedBox(
+        width: double.infinity,
+        height: widgetHeight - 200,
+        child: ListView.builder(
+            itemCount: _images.length,
+            itemBuilder: (BuildContext context, int index) {
+              Asset asset = _images[index];
+              return Padding(
+                  padding: EdgeInsets.all(10),
+                  child: Container(
+                      child: AssetThumb(
+                          width: asset.originalWidth,
+                          height: asset.originalWidth,
+                          asset: asset)));
+            }));
+  }
+
+  Widget mainWidget;
+
   void createCheckIn() {
-    DocumentReference checkInDoc = widget.zones
+    checkInDoc = widget.zones
         .doc(widget.zone)
         .collection("Area")
         .doc(widget.area)
@@ -70,33 +162,77 @@ class _AddPhotosState extends State<AddPhotos> {
     checkInDoc.set({
       "Date": DateTime.now().toString(),
       "message": "",
-      "title": "Check In",
-      "PhotoUrls": null,
+      "title": "Check In baby",
+      "PhotoUrls": ["hello"],
     });
+  }
+
+  Widget addPhotosPage(Widget mainWidget) {
+    final widgetWidth = MediaQuery.of(context).size.width;
+
+    return Center(
+      child: Container(
+        width: widgetWidth / 1.05,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              SizedBox(height: 10),
+              Center(child: Text("${widget.message} ${widget.spotName}")),
+              SizedBox(
+                height: 10.0,
+              ),
+              Center(
+                child: Text("A check in needs some photos!"),
+              ),
+              SizedBox(
+                height: 15.0,
+              ),
+              mainWidget ?? SizedBox(height: 0),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  void initState() {
+    super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
+    widgetHeight = MediaQuery.of(context).size.height;
     createCheckIn();
     return Scaffold(
-      body: Center(
-          child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Text("${widget.message}"),
-          Text("${widget.spotName}"),
-          Text("Lets Add some Photos to this Check In"),
-          ElevatedButton(
-              child: Text("Skip"),
+        appBar: AppBar(
+          title: Text("Add Photos"),
+          leading: IconButton(
               onPressed: () {
-                Navigator.of(context).pushReplacement(
-                    MaterialPageRoute<void>(builder: (BuildContext context) {
-                  return AddDescription(widget.creationId, widget.fullId);
-                }));
-              }),
-        ],
-      )),
-    );
+                loadAssets();
+              },
+              icon: Icon(Icons.add_a_photo_rounded)),
+          actions: [
+            Container(
+                child: InkWell(
+                    onTap: () {
+                      _savePhotos();
+                      Navigator.of(context).pushReplacement(
+                          MaterialPageRoute<void>(
+                              builder: (BuildContext context) {
+                        return AddDescription(widget.creationId, widget.fullId);
+                      }));
+                    },
+                    child: Center(
+                        child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 20),
+                      child: Text("Next"),
+                    ))))
+          ],
+        ),
+        body: addPhotosPage(mainWidget));
+    //body: Center(child: mainWidget));
   }
 }

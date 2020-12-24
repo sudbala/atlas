@@ -55,7 +55,7 @@ class _CheckInPostState extends State<CheckInPost> {
                       },
                     ),
                     CheckInContent(
-                        userName: widget.userName,
+                      userName: widget.userName,
                       checkInTitle: widget.checkIn.checkInTitle,
                       description: widget.checkIn.checkInDescription,
                       checkInID: widget.checkIn.checkInID,
@@ -101,10 +101,14 @@ class CheckInHeader extends StatelessWidget {
             clipper: RoundClipper(),
             child: Swiper(
               itemBuilder: (context, index) {
-                return Image.network(
-                  images[index],
-                  fit: BoxFit.fill,
-                );
+                return InkWell(
+                    onTap: () {
+                      print("nice");
+                    },
+                    child: Image.network(
+                      images[index],
+                      fit: BoxFit.fill,
+                    ));
               },
               indicatorLayout: PageIndicatorLayout.COLOR,
               itemCount: images.length,
@@ -205,23 +209,24 @@ class CheckInContent extends StatelessWidget {
     @required this.checkInTitle,
     @required this.description,
     @required this.userName,
-})  : super(key: key) {
+  }) : super(key: key) {
     var splitID = checkInID.split(";");
     zone = splitID[0];
-    area = splitID[1].substring(0,3) + ";" + splitID[2].substring(0,2);
+    area = splitID[1].substring(0, 3) + ";" + splitID[2].substring(0, 2);
     spotID = splitID[1] + ";" + splitID[2];
     spotName = splitID[3];
 
     /// Getting how long ago it was posted
     String fullDate = splitID[4];
     var dateTimeSplit = fullDate.split(" ");
+
     /// Now do date and time separately
     String date = dateTimeSplit[0];
     var dateSplit = date.split("-");
     int year = int.parse(dateSplit[0]);
     int month = int.parse(dateSplit[1]);
     int day = int.parse(dateSplit[2]);
-    
+
     /// Now we do the same with time
     String time = dateTimeSplit[1];
     var timeSplit = time.split(":");
@@ -229,19 +234,20 @@ class CheckInContent extends StatelessWidget {
     int minute = int.parse(timeSplit[1]);
     var secondSplit = timeSplit[2].split('.');
     int second = int.parse(secondSplit[0]);
-    int millisecond = int.parse(secondSplit[1].substring(0,3));
+    int millisecond = int.parse(secondSplit[1].substring(0, 3));
     int microsecond = int.parse(secondSplit[1].substring(3));
 
     /// Create a new Date time with it
-    DateTime postDate = DateTime(year, month, day, hour, minute, second, millisecond, microsecond);
+    DateTime postDate = DateTime(
+        year, month, day, hour, minute, second, millisecond, microsecond);
     timeAgo = timeago.format(postDate);
-
   }
 
   void _onLocationPressed(context) async {
     /// Here we go to the respective spot page by reading it from the db.
     /// May be an unnecessary read, we'll have to talk about this later on...
-    DocumentSnapshot currentSpot = await FirebaseFirestore.instance.collection('Users')
+    DocumentSnapshot currentSpot = await FirebaseFirestore.instance
+        .collection('Users')
         .doc(myId)
         .collection('visibleZones')
         .doc(zone)
@@ -261,8 +267,6 @@ class CheckInContent extends StatelessWidget {
         },
       ),
     );
-
-
   }
 
   @override
@@ -271,9 +275,7 @@ class CheckInContent extends StatelessWidget {
     Size size = MediaQuery.of(context).size;
     return Container(
       width: size.width,
-      padding: EdgeInsets.symmetric(
-        horizontal: 20
-      ),
+      padding: EdgeInsets.symmetric(horizontal: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -312,7 +314,9 @@ class CheckInContent extends StatelessWidget {
               ],
             ),
           ),
-          SizedBox(height: 25,),
+          SizedBox(
+            height: 25,
+          ),
           Text(
             this.description,
             style: TextStyle(
@@ -325,6 +329,4 @@ class CheckInContent extends StatelessWidget {
       ),
     );
   }
-
-
 }

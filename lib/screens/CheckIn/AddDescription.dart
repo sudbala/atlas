@@ -162,11 +162,14 @@ class _AddDescriptionState extends State<AddDescription> {
                   addToVisibleSpots(myId);
                   updateFriendsVisibleSpots();
                 }
-
+                // no more new screen.
+                Navigator.of(context).popUntil((route) => route.isFirst);
+                /*
                 Navigator.of(context).pushReplacement(
                     MaterialPageRoute<void>(builder: (BuildContext context) {
                   return MainScreen();
                 }));
+                */
               }),
         ],
       )),

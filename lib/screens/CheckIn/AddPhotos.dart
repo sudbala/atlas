@@ -6,7 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_absolute_path/flutter_absolute_path.dart';
+import 'package:flutter/services.dart';
 import 'package:multi_image_picker/multi_image_picker.dart';
 
 final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -81,26 +81,6 @@ class _AddPhotosState extends State<AddPhotos> {
     });
   }
 
-  /// Method to save a photo to the Firebase Storage stole this from sudharsan's profile setup up. Should combine if we ever decide to user libraries or something idk
-  Future<String> uploadFile(File file) async {
-    String returnURL;
-    Reference storageReference = FirebaseStorage.instance
-        .ref()
-        .child('checkInPhotos/$myId;${DateTime.now().toString()}');
-
-    /// Get the storage reference of where the image will go, then use an
-    /// upload task to put upload it there. Upon completion, we get URL
-    UploadTask uploadTask = storageReference.putFile(file);
-    await uploadTask.whenComplete(() async {
-      print('File Uploaded');
-      await storageReference.getDownloadURL().then((value) {
-        returnURL = value;
-      });
-    });
-
-    return returnURL;
-  }
-
   Future _savePhotos() async {
     /// Need to save a blank profile if we don't have a profile image
     /// First, let's decide what our url will be. If not a blank, we need to
@@ -110,13 +90,21 @@ class _AddPhotosState extends State<AddPhotos> {
     List<String> photoUrls = new List<String>();
 // can't use for each here... learned this the hard way.
     for (var image in _images) {
-      // Convert the asset into a file
-      File file =
-          File(await FlutterAbsolutePath.getAbsolutePath(image.identifier));
-      String photoUrl = await uploadFile(file);
-      print(photoUrl);
+      // Trying a data upload method. hopefully this works better cause of course the other ways we have uploaded images don't work on my iphone for some reason
 
-      photoUrls.add(photoUrl);
+      // Convert the asset into a file
+      ByteData byteData = await image.getByteData();
+      List<int> imageData = byteData.buffer.asUint8List();
+
+      Reference ref = FirebaseStorage.instance
+          .ref()
+          .child('checkInPhotos/$myId;${DateTime.now().toString()}.jpg');
+
+      UploadTask uploadTask = ref.putData(imageData);
+
+      await uploadTask.whenComplete(() async {
+        photoUrls.add(await ref.getDownloadURL());
+      });
     }
 
     /// Now we just update our storage in [Firestore]
@@ -162,8 +150,8 @@ class _AddPhotosState extends State<AddPhotos> {
     checkInDoc.set({
       "Date": DateTime.now().toString(),
       "message": "",
-      "title": "Check In baby",
-      "PhotoUrls": ["hello"],
+      "title": "Check In on iphone",
+      "PhotoUrls": [],
     });
   }
 
@@ -219,11 +207,14 @@ class _AddPhotosState extends State<AddPhotos> {
                 child: InkWell(
                     onTap: () {
                       _savePhotos();
-                      Navigator.of(context).pushReplacement(
-                          MaterialPageRoute<void>(
-                              builder: (BuildContext context) {
-                        return AddDescription(widget.creationId, widget.fullId);
-                      }));
+                      if (_images.length != 0) {
+                        Navigator.of(context).pushReplacement(
+                            MaterialPageRoute<void>(
+                                builder: (BuildContext context) {
+                          return AddDescription(
+                              widget.creationId, widget.fullId);
+                        }));
+                      }
                     },
                     child: Center(
                         child: Padding(

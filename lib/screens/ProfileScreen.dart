@@ -335,18 +335,20 @@ class _ProfileScreenState extends State<ProfileScreen>
                               in checkInCollections) {
                             for (QueryDocumentSnapshot checkIn
                                 in areaCheckIns.docs) {
-                              /// BAD FIX, but for now it works
-                              /// TODO: Make it so that we don't need a set?
-                              //if (!checkInIds.contains(checkIn.id)) {
-                              checkIns.add(CheckIn(
-                                checkInTitle: checkIn['title'],
-                                checkInDescription: checkIn['message'],
-                                photoURLs:
-                                    List<String>.from(checkIn['PhotoUrls']),
-                                checkInDate: checkIn['Date'],
-                                checkInID: checkIn.id,
-                              ));
-                              checkInIds.add(checkIn.id);
+                              //Make sure the check in has the photos uploaded before we try to access them.
+                              if ((List<String>.from(checkIn["PhotoUrls"]))
+                                      .length !=
+                                  0) {
+                                checkIns.add(CheckIn(
+                                  checkInTitle: checkIn['title'],
+                                  checkInDescription: checkIn['message'],
+                                  photoURLs:
+                                      List<String>.from(checkIn['PhotoUrls']),
+                                  checkInDate: checkIn['Date'],
+                                  checkInID: checkIn.id,
+                                ));
+                                checkInIds.add(checkIn.id);
+                              }
                               //}
                             }
                           }

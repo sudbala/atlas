@@ -328,6 +328,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                       stream: checkInStream(exploredPlaces),
                       builder: (context, snapshot) {
                         if (snapshot.hasData) {
+                          checkIns = [];
                           List<QuerySnapshot> checkInCollections =
                               snapshot.data.toList();
                           for (QuerySnapshot areaCheckIns
@@ -336,17 +337,17 @@ class _ProfileScreenState extends State<ProfileScreen>
                                 in areaCheckIns.docs) {
                               /// BAD FIX, but for now it works
                               /// TODO: Make it so that we don't need a set?
-                              if (!checkInIds.contains(checkIn.id)) {
-                                checkIns.add(CheckIn(
-                                  checkInTitle: checkIn['title'],
-                                  checkInDescription: checkIn['message'],
-                                  photoURLs:
-                                      List<String>.from(checkIn['PhotoUrls']),
-                                  checkInDate: checkIn['Date'],
-                                  checkInID: checkIn.id,
-                                ));
-                                checkInIds.add(checkIn.id);
-                              }
+                              //if (!checkInIds.contains(checkIn.id)) {
+                              checkIns.add(CheckIn(
+                                checkInTitle: checkIn['title'],
+                                checkInDescription: checkIn['message'],
+                                photoURLs:
+                                    List<String>.from(checkIn['PhotoUrls']),
+                                checkInDate: checkIn['Date'],
+                                checkInID: checkIn.id,
+                              ));
+                              checkInIds.add(checkIn.id);
+                              //}
                             }
                           }
                         }

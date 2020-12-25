@@ -148,6 +148,7 @@ class _AddPhotosState extends State<AddPhotos> {
 
     // Create a check in. The user can then update photos, title, and message should they choose, but they can also skip.
     checkInDoc.set({
+      "TimeStamp": Timestamp.now(),
       "Date": DateTime.now().toString(),
       "message": "",
       "title": "Check In on iphone",
@@ -193,6 +194,8 @@ class _AddPhotosState extends State<AddPhotos> {
   @override
   Widget build(BuildContext context) {
     widgetHeight = MediaQuery.of(context).size.height;
+    // Initial call if we want it here. Kinda jarring for users to just have photo selector open, but it does reduce clicks in post.
+    loadAssets();
     createCheckIn();
     return Scaffold(
         appBar: AppBar(
@@ -211,8 +214,8 @@ class _AddPhotosState extends State<AddPhotos> {
                         Navigator.of(context).pushReplacement(
                             MaterialPageRoute<void>(
                                 builder: (BuildContext context) {
-                          return AddDescription(
-                              widget.creationId, widget.fullId);
+                          return AddDescription(widget.creationId,
+                              widget.fullId, widget.checkInId);
                         }));
                       }
                     },

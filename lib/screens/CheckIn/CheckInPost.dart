@@ -1,4 +1,5 @@
 import 'package:atlas/model/CheckIn.dart';
+import 'package:atlas/screens/CheckIn/photoPage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -50,6 +51,7 @@ class _CheckInPostState extends State<CheckInPost> {
                     CheckInHeader(
                       images: widget.checkIn.photoURLs ?? ["images/detail.png"],
                       onLikePress: null,
+                      title: widget.checkIn.title,
                       onBackPressed: () {
                         Navigator.pop(context);
                       },
@@ -72,6 +74,7 @@ class _CheckInPostState extends State<CheckInPost> {
 /// Widget that holds the header media for the [CheckInPost]. Subject to change.
 class CheckInHeader extends StatelessWidget {
   final List<String> images;
+  final String title;
   final bool isLiked;
   final Function onLikePress, onBackPressed;
 
@@ -79,6 +82,7 @@ class CheckInHeader extends StatelessWidget {
   const CheckInHeader(
       {Key key,
       @required this.images,
+      @required this.title,
       this.isLiked = false,
       @required this.onLikePress,
       @required this.onBackPressed})
@@ -103,7 +107,10 @@ class CheckInHeader extends StatelessWidget {
               itemBuilder: (context, index) {
                 return InkWell(
                     onTap: () {
-                      print("nice");
+                      Navigator.of(context).push(MaterialPageRoute<void>(
+                          builder: (BuildContext context) {
+                        return PhotoPage(images, title);
+                      }));
                     },
                     child: Image.network(
                       images[index],
@@ -258,6 +265,7 @@ class CheckInContent extends StatelessWidget {
         .get();
 
     var data = currentSpot.data();
+    data["zone"] = zone;
 
     Navigator.of(context).push(
       MaterialPageRoute<void>(

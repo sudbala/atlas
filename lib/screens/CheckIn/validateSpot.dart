@@ -267,11 +267,14 @@ class _ValidateSpotState extends State<ValidateSpot> {
                 onPressed: () async {
                   // Call SaveSpot and then once that is done move on to the next part!
                   await _saveSpot(_nameController.text, selectedValue);
-                  Navigator.of(context).pushReplacement(
-                      MaterialPageRoute<void>(builder: (BuildContext context) {
-                    return AddPhotos(
-                        "0", "${_nameController.text}", "$zone/$spotId");
-                  }));
+                  if (selectedValue != null) {
+                    Navigator.of(context).pushReplacement(
+                        MaterialPageRoute<void>(
+                            builder: (BuildContext context) {
+                      return AddPhotos(
+                          "0", "${_nameController.text}", "$zone/$spotId");
+                    }));
+                  }
                 },
                 child: Text(
                   "Save".toUpperCase(),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:photo_view/photo_view.dart';
 
 // A simply page to see one's images in all their glory. Similar to what strava does. Implement imageViewers so one can zoom in on each image.
 class PhotoPage extends StatelessWidget {
@@ -16,9 +17,17 @@ class PhotoPage extends StatelessWidget {
         body: ListView.builder(
             itemCount: photoUrls.length,
             itemBuilder: (BuildContext context, int index) {
+              TransformationController controller = TransformationController();
               return Padding(
                   padding: EdgeInsets.all(10),
-                  child: Container(child: Image.network(photoUrls[index])));
+                  child: Container(
+                      //width: double.infinity,
+                      //height: double.infinity,
+                      child: InteractiveViewer(
+                          onInteractionEnd: (ScaleEndDetails endDetails) {
+                            controller.value = Matrix4.identity();
+                          },
+                          child: Image.network(photoUrls[index]))));
             }));
   }
 }

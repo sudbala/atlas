@@ -1,5 +1,6 @@
 import 'package:atlas/model/CheckIn.dart';
 import 'package:atlas/screens/CheckIn/photoPage.dart';
+import 'package:atlas/screens/ProfileScreen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -61,6 +62,7 @@ class _CheckInPostState extends State<CheckInPost> {
                       checkInTitle: widget.checkIn.checkInTitle,
                       description: widget.checkIn.checkInDescription,
                       checkInID: widget.checkIn.checkInID,
+                      profileId: widget.checkIn.profileId,
                     ),
                   ],
                 ),
@@ -114,7 +116,7 @@ class CheckInHeader extends StatelessWidget {
                     },
                     child: Image.network(
                       images[index],
-                      fit: BoxFit.fill,
+                      fit: BoxFit.cover,
                     ));
               },
               indicatorLayout: PageIndicatorLayout.COLOR,
@@ -188,9 +190,9 @@ class RoundClipper extends CustomClipper<Path> {
   @override
   Path getClip(Size size) {
     var path = Path();
-    path.lineTo(0, size.height - 40);
+    path.lineTo(0, size.height - 30);
     path.quadraticBezierTo(
-        size.width / 1.5, size.height, size.width, size.height - 40);
+        size.width / 1.5, size.height, size.width, size.height - 30);
     path.lineTo(size.width, 0);
     path.close();
 
@@ -206,7 +208,7 @@ class RoundClipper extends CustomClipper<Path> {
 
 class CheckInContent extends StatelessWidget {
   /// These are the instance variables for the [CheckInContent]
-  final String checkInID, checkInTitle, description, userName;
+  final String checkInID, checkInTitle, description, userName, profileId;
   String spotName, zone, area, spotID;
   String timeAgo;
 
@@ -216,6 +218,7 @@ class CheckInContent extends StatelessWidget {
     @required this.checkInTitle,
     @required this.description,
     @required this.userName,
+    @required this.profileId,
   }) : super(key: key) {
     var splitID = checkInID.split(";");
     zone = splitID[0];
@@ -277,6 +280,17 @@ class CheckInContent extends StatelessWidget {
     );
   }
 
+  void onUserPressed(context) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (BuildContext context) {
+          // Send user to LocationScreen.
+          return ProfileScreen(profileId);
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     /// Once again we get the size to make this more dynamic
@@ -296,7 +310,34 @@ class CheckInContent extends StatelessWidget {
             ),
           ),
           Padding(
-            padding: EdgeInsets.symmetric(vertical: 5),
+            padding: EdgeInsets.only(top: 0),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.person,
+                  size: 13,
+                  color: Colors.blue,
+                ),
+                SizedBox(width: 5),
+                Flexible(
+                  child: TextButton(
+                    child: Text(
+                      userName,
+                      style: TextStyle(
+                        fontSize: size.width * 0.035,
+                        color: Colors.black.withOpacity(0.5),
+                      ),
+                    ),
+                    onPressed: () {
+                      onUserPressed(context);
+                    },
+                  ),
+                )
+              ],
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.symmetric(vertical: 0),
             child: Row(
               children: [
                 Icon(
@@ -323,7 +364,7 @@ class CheckInContent extends StatelessWidget {
             ),
           ),
           SizedBox(
-            height: 25,
+            height: 20,
           ),
           Text(
             this.description,

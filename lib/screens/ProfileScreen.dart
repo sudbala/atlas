@@ -210,52 +210,84 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   Widget profileHeader(double height, double width, String userName,
       String name, String imageUrl, String bio, int relationShip) {
-    return Column(children: [
+    TransformationController controller = TransformationController();
+    return Stack(children: [
       //FittedBox(fit: BoxFit.fitWidth, child: Center(child: Text("$userName"))),
       SizedBox(
-        height: height - 112,
+        height: height - height * (2 / 5),
         width: double.infinity,
-        child: Image.network("$imageUrl", fit: BoxFit.cover),
+        child: ClipPath(
+            clipper: ProfileClipper(),
+            child: InteractiveViewer(
+                onInteractionEnd: (ScaleEndDetails endDetails) {
+                  controller.value = Matrix4.identity();
+                },
+                child: Image.network("$imageUrl", fit: BoxFit.cover))),
       ),
-      SizedBox(height: 5),
-      SizedBox(
-          height: 100,
-          child: Row(children: [
-            SizedBox(
-                width: width * (3 / 4),
+      Positioned(
+          top: height - height * (2 / 5) - 10,
+          child: SizedBox(
+            //height: 100,
+            child: SizedBox(
+                width: width,
                 child: Padding(
                     padding: EdgeInsets.symmetric(horizontal: 15),
                     child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(userName,
+                          Row(children: [
+                            SizedBox(
+                                width: width * (3 / 5),
+                                child: Text(name,
+                                    style: GoogleFonts.ebGaramond(
+                                        textStyle: TextStyle(
+                                            shadows: <Shadow>[
+                                          // Playing with some shadows to make the page less 2d, kinda looking cheesy
+                                          // If only I was good with graphic design.
+                                          Shadow(
+                                              offset: Offset(1.0, 1.0),
+                                              blurRadius: 3.0,
+                                              color: Color.fromRGBO(
+                                                  89, 85, 79, 0.8))
+                                        ],
+                                            fontSize: width * 0.07,
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold)))),
+                            SizedBox(
+                                child: Center(child: profileButton()),
+                                width: width * (2 / 5) - 30)
+                          ]),
+                          Text("@$userName",
                               textAlign: TextAlign.left,
-                              style: GoogleFonts.ebGaramond(
-                                  textStyle: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold))),
-                          Text(name,
                               style: GoogleFonts.andika(
                                   textStyle: TextStyle(
-                                color: Colors.white,
+                                fontSize: width * 0.04,
+                                color: Colors.white.withOpacity(0.9),
                               ))),
+                          SizedBox(height: 4),
                           Text(bio,
                               style: GoogleFonts.andika(
                                   textStyle: TextStyle(
+                                fontSize: width * 0.035,
                                 color: Colors.white,
+                              ))),
+                          SizedBox(height: 10),
+                          Text("Number of Places Explored: X",
+                              style: GoogleFonts.andika(
+                                  textStyle: TextStyle(
+                                fontSize: width * 0.035,
+                                color: Colors.white.withOpacity(0.9),
                               )))
                         ]))),
-            SizedBox(width: width / 4, child: Center(child: profileButton())),
-          ])),
-      SizedBox(height: 7),
+          )),
     ]);
   }
 
   @override
   Widget build(BuildContext context) {
     // Profile Height is currently set to 3/5 of user's screen
-    double profileHeight = MediaQuery.of(context).size.height * (3 / 5);
+    double profileHeight = MediaQuery.of(context).size.height * (10 / 10);
     double screenWidth = MediaQuery.of(context).size.width;
 
     return StreamBuilder(
@@ -346,6 +378,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                                       List<String>.from(checkIn['PhotoUrls']),
                                   checkInDate: checkIn['Date'],
                                   checkInID: checkIn.id,
+                                  checkInProfileId: checkIn["profileId"],
+                                  checkInUserName: checkIn["UserName"],
+                                  timeStamp: checkIn["TimeStamp"],
                                 ));
                                 checkInIds.add(checkIn.id);
                               }
@@ -353,6 +388,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                             }
                           }
                         }
+                        // a little sorting by time never hurt anyone... right
+                        checkIns.sort(
+                            (b, a) => (a.timeStamp).compareTo(b.timeStamp));
                         return ListView.builder(
                           itemCount: checkIns.length,
                           itemBuilder: (context, index) {
@@ -387,5 +425,26 @@ class _ProfileScreenState extends State<ProfileScreen>
             return Container(child: Center(child: CircularProgressIndicator()));
           }
         });
+  }
+}
+
+class ProfileClipper extends CustomClipper<Path> {
+  /// getClip() gives back the rounded clipping patter you see on the images.
+  @override
+  Path getClip(Size size) {
+    var path = Path();
+    path.lineTo(0, size.height - 50);
+    path.quadraticBezierTo(
+        size.width / 1.5, size.height, size.width, size.height - 20);
+    path.lineTo(size.width, 0);
+    path.close();
+
+    return path;
+  }
+
+  @override
+  bool shouldReclip(covariant CustomClipper<Path> oldClipper) {
+    /// Necessary but has no purpose
+    return false;
   }
 }

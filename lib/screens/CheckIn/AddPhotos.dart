@@ -134,7 +134,12 @@ class _AddPhotosState extends State<AddPhotos> {
 
   Widget mainWidget;
 
-  void createCheckIn() {
+  void createCheckIn() async {
+    // Reading in userName here. couldn't think of better way, it is needed for check ins when we display them in feeds and such
+
+    String userName =
+        (await FirebaseFirestore.instance.collection("Users").doc(myId).get())
+            .data()["UserName"];
     checkInDoc = widget.zones
         .doc(widget.zone)
         .collection("Area")
@@ -153,6 +158,8 @@ class _AddPhotosState extends State<AddPhotos> {
       "message": "",
       "title": "Check In on iphone",
       "PhotoUrls": [],
+      "UserName": userName,
+      "profileId": myId,
     });
   }
 

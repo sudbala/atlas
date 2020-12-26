@@ -51,7 +51,9 @@ dependencies:
   flutter_svg: ^0.19.1
   timeago: ^2.0.29
   multi_image_picker: ^4.7.14
-  flutter_absolute_path: ^1.0.6
+  photo_view: ^0.10.3
+
+
   
 
 

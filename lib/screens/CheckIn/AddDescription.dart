@@ -84,6 +84,8 @@ class _AddDescriptionState extends State<AddDescription> {
         spotRef.update({
           "FriendsWhoHaveVisited": FieldValue.arrayUnion([myId])
         });
+        // Map might need to reload because there are new checkIn's
+        zoneRef.set({"LastUpdate": DateTime.now().toString()});
       }
       return Future.value(true);
     } else {
@@ -157,7 +159,7 @@ class _AddDescriptionState extends State<AddDescription> {
         .doc(widget.spotId)
         .collection("VisitedUsers")
         .doc(myId)
-        .collection("CheckIns")
+        .collection("CheckIns;${widget.spotId}")
         .doc(widget.checkInId);
 
     checkInDoc.update({"title": title, "message": description});

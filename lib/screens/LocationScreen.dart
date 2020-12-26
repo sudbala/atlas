@@ -30,7 +30,9 @@ class _friendsPageState extends State<friendsPage>
   bool get wantKeepAlive => true;
 
   Stream friendCheckIns() {
-    List<Stream<QuerySnapshot>> checkInStreams = List();
+    List fWHVS = widget.data["FriendsWhoHaveVisited"];
+
+    List<Stream> checkInStreams = List();
     CollectionReference allCheckIns = FirebaseFirestore.instance
         .collection('Zones')
         .doc(widget.data["zone"])
@@ -40,16 +42,23 @@ class _friendsPageState extends State<friendsPage>
         .doc("${widget.data["Northing"]};${widget.data["Easting"]}")
         .collection('VisitedUsers');
 
-    List fWHVS = widget.data["FriendsWhoHaveVisited"];
-    for (String friend in fWHVS) {
-      print(friend);
-      checkInStreams.add(allCheckIns
-          .doc(friend)
-          .collection("CheckIns")
-          .orderBy("TimeStamp", descending: true)
-          //.limit(1) Any limiting here will limit by user. Not really what we want to be honest. We could lazily rationalize it by saying that its nice it doesn't overwhelm the spot with 1 users info
-          // Maybe its better to see 1 users most recent post and another friends post from a while ago. as opposed to two from the same user... idk.
-          .snapshots());
+    // lmao just throwing this boy in there to tell the stream there is some data
+    //
+    checkInStreams.add(Stream.value(1));
+
+    if (fWHVS.length != 0) {
+      for (String friend in fWHVS) {
+        print(friend);
+        checkInStreams.add(allCheckIns
+            .doc(friend)
+            .collection(
+                "CheckIns;${widget.data["Northing"]};${widget.data["Easting"]}")
+            // Don't really need to order by timeStamp if we are sorting later i guess.
+            .orderBy("TimeStamp", descending: true)
+            //.limit(1) Any limiting here will limit by user. Not really what we want to be honest. We could lazily rationalize it by saying that its nice it doesn't overwhelm the spot with 1 users info
+            // Maybe its better to see 1 users most recent post and another friends post from a while ago. as opposed to two from the same user... idk.
+            .snapshots());
+      }
     }
 
     //return StreamGroup.merge(checkInStreams);
@@ -59,14 +68,18 @@ class _friendsPageState extends State<friendsPage>
     return StreamZip(checkInStreams);
 
     /// ALTERNATIVE WAY
-
-    //This collectionGroup thing is pretty cool but unfortunately would go through every CheckIn... not just the checkIN's under this spot.
-    //could maybe do a where spotId is the spot id we are looking for and then have checkIns include their spot id, but I think this would take too long
-    // If we already know the spot and we already know the friends who have visited this spot it really shouldnt be that long of  search
+    // Look at all collection that are CheckIns at this specific spot. Not finding any success. Queries not working
+    /*
+    return FirebaseFirestore.instance
+        .collectionGroup(
+            "CheckIns;${widget.data["Northing"]};${widget.data["Easting"]}")
+        .snapshots();
+        */
   }
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     //HeapPriorityQueue<CheckIn> checkIns = HeapPriorityQueue<CheckIn>(
     List checkIns;
     return StreamBuilder(
@@ -75,23 +88,25 @@ class _friendsPageState extends State<friendsPage>
           if (snapshot.hasData) {
             checkIns = [];
 
-            List<QuerySnapshot> checkInCollections = snapshot.data.toList();
-            for (QuerySnapshot friendCheckIn in checkInCollections) {
-              List<DocumentSnapshot> checkInSnapShots = friendCheckIn.docs;
-              //List<DocumentSnapshot> checkInSnapShots = snapshot.data.docs;
-              for (DocumentSnapshot checkIn in checkInSnapShots) {
-                //Make sure the check in has the photos uploaded before we try to access them.
-                if ((List<String>.from(checkIn["PhotoUrls"])).length != 0) {
-                  checkIns.add(CheckIn(
-                    checkInTitle: checkIn['title'],
-                    checkInDescription: checkIn['message'],
-                    photoURLs: List<String>.from(checkIn['PhotoUrls']),
-                    checkInDate: checkIn['Date'],
-                    checkInID: checkIn.id,
-                    checkInProfileId: checkIn["profileId"],
-                    checkInUserName: checkIn["UserName"],
-                    timeStamp: checkIn["TimeStamp"],
-                  ));
+            List checkInCollections = snapshot.data.toList().sublist(1);
+            if (checkInCollections.length > 0) {
+              for (QuerySnapshot friendCheckIn in checkInCollections) {
+                List<DocumentSnapshot> checkInSnapShots = friendCheckIn.docs;
+                //List<DocumentSnapshot> checkInSnapShots = snapshot.data.docs;
+                for (DocumentSnapshot checkIn in checkInSnapShots) {
+                  //Make sure the check in has the photos uploaded before we try to access them.
+                  if ((List<String>.from(checkIn["PhotoUrls"])).length != 0) {
+                    checkIns.add(CheckIn(
+                      checkInTitle: checkIn['title'],
+                      checkInDescription: checkIn['message'],
+                      photoURLs: List<String>.from(checkIn['PhotoUrls']),
+                      checkInDate: checkIn['Date'],
+                      checkInID: checkIn.id,
+                      checkInProfileId: checkIn["profileId"],
+                      checkInUserName: checkIn["UserName"],
+                      timeStamp: checkIn["TimeStamp"],
+                    ));
+                  }
                 }
               }
             }
@@ -128,6 +143,8 @@ class _friendsPageState extends State<friendsPage>
               return Text(
                   "None of your friends have checked in here before, take them with you next time!");
             }
+          } else if (snapshot.hasError) {
+            print("shit there was an error");
           } else {
             return Container(child: Center(child: CircularProgressIndicator()));
           }
@@ -181,7 +198,8 @@ class _LocationScreenState extends State<LocationScreen>
         .doc("${widget.data["Northing"]};${widget.data["Easting"]}")
         .collection('VisitedUsers')
         .doc(myId)
-        .collection('CheckIns');
+        .collection(
+            'CheckIns;${widget.data["Northing"]};${widget.data["Easting"]}');
     //Return the snapshots of the users check INs. Order by timestamp descending and limit the number of posts
     // Once the user scrolls down more we can load more posts!
     return myCheckIns

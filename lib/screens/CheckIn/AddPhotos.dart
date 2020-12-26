@@ -136,20 +136,31 @@ class _AddPhotosState extends State<AddPhotos> {
 
   void createCheckIn() async {
     // Reading in userName here. couldn't think of better way, it is needed for check ins when we display them in feeds and such
+    // Does seem like a lot of information being read in just go get a user name
 
     String userName =
         (await FirebaseFirestore.instance.collection("Users").doc(myId).get())
             .data()["UserName"];
-    checkInDoc = widget.zones
+
+    DocumentReference profileAtSpot = widget.zones
         .doc(widget.zone)
         .collection("Area")
         .doc(widget.area)
         .collection("Spots")
         .doc(widget.spotId)
         .collection("VisitedUsers")
-        .doc(myId)
-        .collection("CheckIns")
+        .doc(myId);
+
+    // If this is the users's first time here (but this hasn't already been set in spot creation for id 0)
+    // write hasVisited on this user so that it shows up in queries.
+    if (widget.creationId == "1") {
+      profileAtSpot.set({"hasVisited": myId});
+    }
+
+    checkInDoc = profileAtSpot
+        .collection("CheckIns;${widget.spotId}")
         .doc(widget.checkInId);
+// Mark user has visited this spot
 
     // Create a check in. The user can then update photos, title, and message should they choose, but they can also skip.
     checkInDoc.set({

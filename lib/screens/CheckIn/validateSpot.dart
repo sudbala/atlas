@@ -178,7 +178,7 @@ class _ValidateSpotState extends State<ValidateSpot> {
         .doc(spotId)
         .collection("VisitedUsers")
         .doc(myId)
-        .set({"hasVisited": true});
+        .set({"hasVisited": myId});
 
     // add the spot to the list of spots in this area. Will help with future searching
     await areaDoc.update({

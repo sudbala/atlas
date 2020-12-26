@@ -104,10 +104,9 @@ class _ProfileScreenState extends State<ProfileScreen>
           "Genre": data["Genre"],
           "Name": data["Name"],
         });
-
-        // Update the users zones document so that the map knows to reload.
-        zoneRef.set({"LastUpdate": DateTime.now().toString()});
       }
+      // Update the users zones document so that the map knows to reload.
+      zoneRef.set({"LastUpdate": DateTime.now().toString()});
     });
   }
 
@@ -121,13 +120,15 @@ class _ProfileScreenState extends State<ProfileScreen>
     updateUsersVisibleSpots(otherProfileId, myId, exploredPlacesOther);
   }
 
-  Stream<List<QuerySnapshot>> checkInStream(List<dynamic> explored) {
+  Stream checkInStream(List<dynamic> explored) {
     /// This method takes in the explored places for a given user and loads their
     /// associated checkIns with each. This seems a little tedious atm...
 
     /// Let's start with just making a for-each loop with the explored places.
     /// From here, we will do a read for each place we have checked in. Should
     /// be O(n) time because each read should be O(1)
+    //
+
     List<Stream<QuerySnapshot>> checkInStreams = List();
     print('WE GOT HERE #1');
     print('MY EXPLORED PLACES: ' + explored.toString());
@@ -152,7 +153,7 @@ class _ProfileScreenState extends State<ProfileScreen>
           .doc(spotId)
           .collection('VisitedUsers')
           .doc(widget.profileID)
-          .collection('CheckIns')
+          .collection('CheckIns;$spotId')
           .snapshots();
 
       /// Once we get the stream, we add it to the list of streams that we will
@@ -160,6 +161,8 @@ class _ProfileScreenState extends State<ProfileScreen>
       checkInStreams.add(stream);
     }
     return StreamZip(checkInStreams);
+
+    // Trying something else here.
   }
 
   Widget profileButton() {

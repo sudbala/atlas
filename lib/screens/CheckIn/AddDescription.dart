@@ -163,10 +163,6 @@ class _AddDescriptionState extends State<AddDescription> {
         .doc(widget.checkInId);
 
     checkInDoc.update({"title": title, "message": description});
-
-    FirebaseFirestore.instance.collection("CheckIns").doc(myId).update({
-      "CheckIns": FieldValue.arrayUnion([widget.checkInId])
-    });
   }
 
   @override

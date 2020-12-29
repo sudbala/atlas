@@ -162,14 +162,20 @@ class _AddPhotosState extends State<AddPhotos> {
 // Mark user has visited this spot
 
     // Create a check in. The user can then update photos, title, and message should they choose, but they can also skip.
+    Timestamp time = Timestamp.now();
+
     checkInDoc.set({
-      "TimeStamp": Timestamp.now(),
+      "TimeStamp": time,
       "Date": DateTime.now().toString(),
       "message": "",
       "title": "Check In on iphone",
       "PhotoUrls": [],
       "UserName": userName,
       "profileId": myId,
+    });
+
+    FirebaseFirestore.instance.collection("CheckIns").doc(myId).update({
+      "CheckIns": FieldValue.arrayUnion([widget.checkInId])
     });
   }
 

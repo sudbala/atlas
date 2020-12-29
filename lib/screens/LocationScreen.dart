@@ -34,13 +34,12 @@ class _friendsPageState extends State<friendsPage>
     //fWHVS = widget.data["FriendsWhoHaveVisited"];
   }
 
-// oh the inefficency... Need this data anyways to see that the list of friends who have visited can change.
-
   @override
   Widget build(BuildContext context) {
     super.build(context);
 
     return StreamBuilder(
+        // oh the inefficency... Need this data anyways to see that the list of friends who have visited can change.
         stream: FirebaseFirestore.instance
             .collection('Users')
             .doc(myId)

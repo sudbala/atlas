@@ -1,9 +1,11 @@
 import 'dart:collection';
 
 import 'package:atlas/model/CheckIn.dart';
+import 'package:atlas/model/CheckInOrder.dart';
 import 'package:atlas/screens/CheckIn/CheckInPost.dart';
 import 'package:atlas/screens/SettingsScreen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -22,7 +24,9 @@ class ProfileScreen extends StatefulWidget {
 
 // Don't really know what SingleTickerProviderStateMixin is but it allows me to may a tab controller
 class _ProfileScreenState extends State<ProfileScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
   // A little bit of code to setup a tabController;
   TabController tController;
   CollectionReference users = FirebaseFirestore.instance.collection("Users");
@@ -32,15 +36,11 @@ class _ProfileScreenState extends State<ProfileScreen>
   final List<String> checkInExample =
       List.generate(50, (index) => "Check In $index");
 
-  List<CheckIn> checkIns;
-  Set<String> checkInIds;
-
+  int personalPostsLoaded;
   @override
   void initState() {
     super.initState();
     tController = TabController(length: 3, vsync: this);
-    checkIns = List();
-    checkInIds = HashSet();
   }
 
   int relationShipToProfile;
@@ -104,10 +104,9 @@ class _ProfileScreenState extends State<ProfileScreen>
           "Genre": data["Genre"],
           "Name": data["Name"],
         });
-
-        // Update the users zones document so that the map knows to reload.
-        zoneRef.set({"LastUpdate": DateTime.now().toString()});
       }
+      // Update the users zones document so that the map knows to reload.
+      zoneRef.set({"LastUpdate": DateTime.now().toString()});
     });
   }
 
@@ -119,47 +118,6 @@ class _ProfileScreenState extends State<ProfileScreen>
     // Go through all of my explored spots and add them to otherProfileId visibleZones.
     updateUsersVisibleSpots(myId, otherProfileId, myExploredSpots);
     updateUsersVisibleSpots(otherProfileId, myId, exploredPlacesOther);
-  }
-
-  Stream<List<QuerySnapshot>> checkInStream(List<dynamic> explored) {
-    /// This method takes in the explored places for a given user and loads their
-    /// associated checkIns with each. This seems a little tedious atm...
-
-    /// Let's start with just making a for-each loop with the explored places.
-    /// From here, we will do a read for each place we have checked in. Should
-    /// be O(n) time because each read should be O(1)
-    List<Stream<QuerySnapshot>> checkInStreams = List();
-    print('WE GOT HERE #1');
-    print('MY EXPLORED PLACES: ' + explored.toString());
-    for (String fullSpotID in explored) {
-      //print(fullSpotID);
-      /// In order to get the collection reference for checkIns, we need to parse
-      /// the current spotID. Was lazy, took from above lol
-      var split = fullSpotID.split("/");
-      String zone = split[0];
-      String spotId = split[1];
-      var splitId = spotId.split(";");
-      String area =
-          "${splitId[0].substring(0, 3)};${splitId[1].substring(0, 2)}";
-
-      /// With all the parsed data, let's get the associated snapshot stream
-      Stream<QuerySnapshot> stream = FirebaseFirestore.instance
-          .collection('Zones')
-          .doc(zone)
-          .collection('Area')
-          .doc(area)
-          .collection('Spots')
-          .doc(spotId)
-          .collection('VisitedUsers')
-          .doc(widget.profileID)
-          .collection('CheckIns')
-          .snapshots();
-
-      /// Once we get the stream, we add it to the list of streams that we will
-      /// zip up into one stream when we return
-      checkInStreams.add(stream);
-    }
-    return StreamZip(checkInStreams);
   }
 
   Widget profileButton() {
@@ -208,54 +166,93 @@ class _ProfileScreenState extends State<ProfileScreen>
     }
   }
 
-  Widget profileHeader(double height, double width, String userName,
-      String name, String imageUrl, String bio, int relationShip) {
-    return Column(children: [
+  Widget profileHeader(
+      double height,
+      double width,
+      String userName,
+      String name,
+      String imageUrl,
+      String bio,
+      int relationShip,
+      int numExplored) {
+    TransformationController controller = TransformationController();
+    return Stack(children: [
       //FittedBox(fit: BoxFit.fitWidth, child: Center(child: Text("$userName"))),
       SizedBox(
-        height: height - 112,
+        height: height - height * (2 / 5),
         width: double.infinity,
-        child: Image.network("$imageUrl", fit: BoxFit.cover),
+        child: ClipPath(
+            clipper: ProfileClipper(),
+            child: InteractiveViewer(
+                onInteractionEnd: (ScaleEndDetails endDetails) {
+                  controller.value = Matrix4.identity();
+                },
+                child: Image.network("$imageUrl", fit: BoxFit.cover))),
       ),
-      SizedBox(height: 5),
-      SizedBox(
-          height: 100,
-          child: Row(children: [
-            SizedBox(
-                width: width * (3 / 4),
+      Positioned(
+          top: height - height * (2 / 5) - 10,
+          child: SizedBox(
+            //height: 100,
+            child: SizedBox(
+                width: width,
                 child: Padding(
                     padding: EdgeInsets.symmetric(horizontal: 15),
                     child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(userName,
+                          Row(children: [
+                            SizedBox(
+                                width: width * (3 / 5),
+                                child: Text(name,
+                                    style: GoogleFonts.ebGaramond(
+                                        textStyle: TextStyle(
+                                            shadows: <Shadow>[
+                                          // Playing with some shadows to make the page less 2d, kinda looking cheesy
+                                          // If only I was good with graphic design.
+                                          Shadow(
+                                              offset: Offset(1.0, 1.0),
+                                              blurRadius: 3.0,
+                                              color: Color.fromRGBO(
+                                                  89, 85, 79, 0.8))
+                                        ],
+                                            fontSize: width * 0.07,
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold)))),
+                            SizedBox(
+                                child: Center(child: profileButton()),
+                                width: width * (2 / 5) - 30)
+                          ]),
+                          Text("@$userName",
                               textAlign: TextAlign.left,
-                              style: GoogleFonts.ebGaramond(
-                                  textStyle: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold))),
-                          Text(name,
                               style: GoogleFonts.andika(
                                   textStyle: TextStyle(
-                                color: Colors.white,
+                                fontSize: width * 0.04,
+                                color: Colors.white.withOpacity(0.9),
                               ))),
+                          SizedBox(height: 4),
                           Text(bio,
                               style: GoogleFonts.andika(
                                   textStyle: TextStyle(
+                                fontSize: width * 0.035,
                                 color: Colors.white,
+                              ))),
+                          SizedBox(height: 10),
+                          Text("Number of Places Explored: $numExplored",
+                              style: GoogleFonts.andika(
+                                  textStyle: TextStyle(
+                                fontSize: width * 0.035,
+                                color: Colors.white.withOpacity(0.9),
                               )))
                         ]))),
-            SizedBox(width: width / 4, child: Center(child: profileButton())),
-          ])),
-      SizedBox(height: 7),
+          )),
     ]);
   }
 
   @override
   Widget build(BuildContext context) {
     // Profile Height is currently set to 3/5 of user's screen
-    double profileHeight = MediaQuery.of(context).size.height * (3 / 5);
+    double profileHeight = MediaQuery.of(context).size.height * (10 / 10);
     double screenWidth = MediaQuery.of(context).size.width;
 
     return StreamBuilder(
@@ -303,7 +300,8 @@ class _ProfileScreenState extends State<ProfileScreen>
                           name,
                           profileUrl,
                           bio,
-                          relationShipToProfile),
+                          relationShipToProfile,
+                          exploredPlaces.length),
                     ),
                     bottom: TabBar(
                       tabs: [
@@ -324,62 +322,202 @@ class _ProfileScreenState extends State<ProfileScreen>
               // The bulk of a users view.
               body: TabBarView(
                 children: [
-                  StreamBuilder(
-                      stream: checkInStream(exploredPlaces),
-                      builder: (context, snapshot) {
-                        if (snapshot.hasData) {
-                          List<QuerySnapshot> checkInCollections =
-                              snapshot.data.toList();
-                          for (QuerySnapshot areaCheckIns
-                              in checkInCollections) {
-                            for (QueryDocumentSnapshot checkIn
-                                in areaCheckIns.docs) {
-                              /// BAD FIX, but for now it works
-                              /// TODO: Make it so that we don't need a set?
-                              if (!checkInIds.contains(checkIn.id)) {
-                                checkIns.add(CheckIn(
-                                  checkInTitle: checkIn['title'],
-                                  checkInDescription: checkIn['message'],
-                                  photoURLs:
-                                      List<String>.from(checkIn['PhotoUrls']),
-                                  checkInDate: checkIn['Date'],
-                                  checkInID: checkIn.id,
-                                ));
-                                checkInIds.add(checkIn.id);
-                              }
-                            }
-                          }
-                        }
-                        return ListView.builder(
-                          itemCount: checkIns.length,
-                          itemBuilder: (context, index) {
-                            return ListTile(
-                              onTap: () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute<void>(
-                                    builder: (BuildContext context) {
-                                      /// Return the associated checkIn
-                                      return CheckInPost(
-                                        checkIn: checkIns[index],
-                                        userName: userName,
-                                      );
-                                    },
-                                  ),
-                                );
-                              },
-                              title: Text(
-                                "Check In: " + checkIns[index].checkInTitle,
-                              ),
-                            );
-                          },
-                        );
-                      }),
+                  checkInTab(widget.profileID, userName, exploredPlaces),
                   Text("Put a list of all favorite places"),
                   Text("Put a user's heatmap here"),
                 ],
                 controller: tController,
               ),
             ));
+          } else {
+            return Container(child: Center(child: CircularProgressIndicator()));
+          }
+        });
+  }
+}
+
+class ProfileClipper extends CustomClipper<Path> {
+  /// getClip() gives back the rounded clipping patter you see on the images.
+  @override
+  Path getClip(Size size) {
+    var path = Path();
+    path.lineTo(0, size.height - 50);
+    path.quadraticBezierTo(
+        size.width / 1.5, size.height, size.width, size.height - 20);
+    path.lineTo(size.width, 0);
+    path.close();
+
+    return path;
+  }
+
+  @override
+  bool shouldReclip(covariant CustomClipper<Path> oldClipper) {
+    /// Necessary but has no purpose
+    return false;
+  }
+}
+
+class checkInTab extends StatefulWidget {
+  String profileID;
+  String userName;
+  List explored;
+
+  checkInTab(String profileID, String userName, List explored) {
+    this.profileID = profileID;
+    this.userName = userName;
+    this.explored = explored;
+  }
+
+  @override
+  _checkInTabState createState() => _checkInTabState();
+}
+
+class _checkInTabState extends State<checkInTab>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  int personalPostsLoaded;
+  List<CheckIn> checkIns;
+  List checkInsToLoad;
+  bool workAroundReload;
+  @override
+  void initState() {
+    super.initState();
+    personalPostsLoaded = 5;
+    checkIns = List();
+    workAroundReload = false;
+  }
+
+  Stream checkInStream(List checkInsToLoad) {
+    List<Stream> streams = List();
+
+    for (int i = checkInsToLoad.length - 1; i >= 0; i--) {
+      CheckInOrder checkIn = CheckInOrder(checkInsToLoad[i]);
+      streams.add(FirebaseFirestore.instance
+          .collection("Zones")
+          .doc(checkIn.zone)
+          .collection("Area")
+          .doc(checkIn.area)
+          .collection("Spots")
+          .doc(checkIn.spotId)
+          .collection("VisitedUsers")
+          .doc(widget.profileID)
+          .collection("CheckIns;${widget.profileID}")
+          .doc(checkIn.checkInId)
+          .snapshots());
+    }
+    return StreamZip(streams);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return StreamBuilder(
+        stream: FirebaseFirestore.instance
+            .collection("CheckIns")
+            .doc(widget.profileID)
+            .snapshots(),
+        builder: (context, docSnapshot) {
+          if (docSnapshot.hasData) {
+            List allCheckIns = docSnapshot.data["CheckIns"];
+            int checkInLength = allCheckIns.length;
+            if (checkInLength > personalPostsLoaded) {
+              checkInsToLoad = allCheckIns.sublist(
+                  checkInLength - personalPostsLoaded, checkInLength);
+            } else {
+              checkInsToLoad = allCheckIns;
+            }
+            return StreamBuilder(
+                stream: checkInStream(checkInsToLoad),
+                builder: (context, snapshot) {
+                  //Set up some stuff for the check Ins tab scroller to detect when to load more posts.
+
+                  ScrollController scrollController = ScrollController();
+                  scrollController.addListener(() {
+                    if (scrollController.position.pixels ==
+                        scrollController.position.maxScrollExtent) {
+                      if (personalPostsLoaded != checkInLength) {
+                        setState(() {
+                          // load 5 more posts WOOOO
+                          if (personalPostsLoaded <= checkInLength - 5) {
+                            personalPostsLoaded += 5;
+                          } else {
+                            personalPostsLoaded = checkInLength;
+                          }
+                        });
+                      }
+                    }
+                  });
+
+                  if (snapshot.hasData) {
+                    checkIns = [];
+                    //List<QuerySnapshot> checkInCollections = snapshot.data.toList();
+                    // for (QuerySnapshot areaCheckIns in checkInCollections) {
+                    for (DocumentSnapshot checkIn in snapshot.data.toList()) {
+                      //Make sure the check in has the photos uploaded before we try to access them.
+
+                      if ((List<String>.from(checkIn["PhotoUrls"])).length !=
+                          0) {
+                        checkIns.add(CheckIn(
+                          checkInTitle: checkIn['title'],
+                          checkInDescription: checkIn['message'],
+                          photoURLs: List<String>.from(checkIn['PhotoUrls']),
+                          checkInDate: checkIn['Date'],
+                          checkInID: checkIn.id,
+                          checkInProfileId: checkIn["profileId"],
+                          checkInUserName: checkIn["UserName"],
+                          timeStamp: checkIn["TimeStamp"],
+                        ));
+                      }
+                    }
+                    // }
+
+                  } else if (snapshot.hasError) {
+                    print(snapshot.error);
+
+                    if (workAroundReload == false) {
+                      workAroundReload = true;
+                      Future.delayed(Duration(seconds: 1), () {
+                        setState(() {
+                          workAroundReload = true;
+                        });
+                      });
+                    }
+                  }
+
+                  // a little sorting by time never hurt anyone... right
+                  /*
+                        checkIns.sort(
+                            (b, a) => (a.timeStamp).compareTo(b.timeStamp));
+
+                        */
+
+                  return ListView.builder(
+                    //controller: scrollController,
+                    itemCount: checkIns.length,
+                    itemBuilder: (context, index) {
+                      return ListTile(
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (BuildContext context) {
+                                /// Return the associated checkIn
+                                return CheckInPost(
+                                  checkIn: checkIns[index],
+                                  userName: widget.userName,
+                                );
+                              },
+                            ),
+                          );
+                        },
+                        title: Text(
+                          "Check In: " + checkIns[index].checkInTitle,
+                        ),
+                      );
+                    },
+                  );
+                });
           } else {
             return Container(child: Center(child: CircularProgressIndicator()));
           }

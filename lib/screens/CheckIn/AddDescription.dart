@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 final FirebaseAuth _auth = FirebaseAuth.instance;
 final User currentUser = _auth.currentUser;
@@ -17,7 +18,8 @@ class AddDescription extends StatefulWidget {
   String easting;
   String northing;
 
-  AddDescription(String creationId, String fullId) {
+  String checkInId;
+  AddDescription(String creationId, String fullId, String checkInId) {
     this.creationId = creationId;
     this.fullId = fullId;
 
@@ -25,6 +27,7 @@ class AddDescription extends StatefulWidget {
 
     this.zone = split[0];
     this.spotId = split[1];
+    this.checkInId = checkInId;
 
     var areaSplit = this.spotId.split(";");
     this.northing = areaSplit[0];
@@ -39,6 +42,9 @@ class AddDescription extends StatefulWidget {
 class _AddDescriptionState extends State<AddDescription> {
   DocumentReference userDoc =
       FirebaseFirestore.instance.collection("Users").doc(myId);
+
+  final _titleController = TextEditingController();
+  final _descriptionController = TextEditingController();
   // When a user discovers or explore a spot it needs to be added to
   void addToExploredSpots() {
     // It is important to keep a list of spots that the user has actually personally explored
@@ -78,6 +84,8 @@ class _AddDescriptionState extends State<AddDescription> {
         spotRef.update({
           "FriendsWhoHaveVisited": FieldValue.arrayUnion([myId])
         });
+        // Map might need to reload because there are new checkIn's
+        zoneRef.set({"LastUpdate": DateTime.now().toString()});
       }
       return Future.value(true);
     } else {
@@ -141,35 +149,99 @@ class _AddDescriptionState extends State<AddDescription> {
     });
   }
 
+  void saveText(String title, String description) async {
+    CollectionReference zones = FirebaseFirestore.instance.collection("Zones");
+    DocumentReference checkInDoc = zones
+        .doc(widget.zone)
+        .collection("Area")
+        .doc(widget.area)
+        .collection("Spots")
+        .doc(widget.spotId)
+        .collection("VisitedUsers")
+        .doc(myId)
+        .collection("CheckIns;$myId")
+        .doc(widget.checkInId);
+
+    checkInDoc.update({"title": title, "message": description});
+  }
+
   @override
   Widget build(BuildContext context) {
+    final widgetWidth = MediaQuery.of(context).size.width;
     return Scaffold(
-      body: Center(
-          child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Text("Add a Title and Description to this post!"),
-          ElevatedButton(
-              child: Text("Skip"),
-              onPressed: () {
-                // Okay the user has completed the process of a check in.
-                ///Now if this was the first check in at a spot ie doesn't have a creation Id of 2 (2 is for returning spot)
-                // We need to add it to the user's explored page and visibleSpots!
+        appBar: AppBar(
+            title: Text("Title and Story"),
+            leading: Container(),
+            actions: [
+              Container(
+                  child: InkWell(
+                      onTap: () {
+                        // Okay the user has completed the process of a check in.
+                        ///Now if this was the first check in at a spot ie doesn't have a creation Id of 2 (2 is for returning spot)
+                        // We need to add it to the user's explored page and visibleSpots!
 
-                if (widget.creationId != "2") {
-                  addToExploredSpots();
-                  addToVisibleSpots(myId);
-                  updateFriendsVisibleSpots();
-                }
+                        if (widget.creationId != "2") {
+                          addToExploredSpots();
+                          addToVisibleSpots(myId);
+                          updateFriendsVisibleSpots();
+                        }
+                        saveText(
+                            _titleController.text, _descriptionController.text);
+                        // no more new screen.
+                        Navigator.of(context)
+                            .popUntil((route) => route.isFirst);
+                      },
+                      child: Center(
+                          child: Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 20),
+                        child: Text("Post"),
+                      ))))
+            ]),
+        body: Center(
+          child: Container(
+              width: widgetWidth / 1.1,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text("Add a Title and Story to this post!"),
+                  SizedBox(height: 20),
+                  TextField(
+                    inputFormatters: [LengthLimitingTextInputFormatter(40)],
+                    controller: _titleController,
+                    decoration: InputDecoration(
+                        border: new OutlineInputBorder(
+                          borderRadius: const BorderRadius.all(
+                            const Radius.circular(20.0),
+                          ),
+                        ),
+                        filled: true,
+                        hintStyle: new TextStyle(color: Colors.grey[800]),
+                        hintText: "Write a clever title!",
+                        fillColor: Colors.white70),
+                  ),
+                  SizedBox(height: 20),
+                  TextField(
+                    //inputFormatters: [LengthLimitingTextInputFormatter(20)],
+                    controller: _descriptionController,
+                    keyboardType: TextInputType.multiline,
+                    minLines: 6,
 
-                Navigator.of(context).pushReplacement(
-                    MaterialPageRoute<void>(builder: (BuildContext context) {
-                  return MainScreen();
-                }));
-              }),
-        ],
-      )),
-    );
+                    maxLines: 6,
+                    decoration: InputDecoration(
+                        border: new OutlineInputBorder(
+                          borderRadius: const BorderRadius.all(
+                            const Radius.circular(20.0),
+                          ),
+                        ),
+                        filled: true,
+                        hintStyle: new TextStyle(color: Colors.grey[800]),
+                        hintText: "Share your story!",
+                        fillColor: Colors.white70),
+                  ),
+                  SizedBox(height: 20),
+                ],
+              )),
+        ));
   }
 }

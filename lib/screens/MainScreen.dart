@@ -20,7 +20,10 @@ class MainScreen extends StatefulWidget {
   _MainScreenState createState() => _MainScreenState();
 }
 
-class _MainScreenState extends State<MainScreen> {
+class _MainScreenState extends State<MainScreen>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
   int _selectedIndex = 0;
   List<Widget> _widgetOptions;
   Position pos;
@@ -84,6 +87,11 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     final bottomBarHeight = MediaQuery.of(context).size.height / 15;
     return Scaffold(
+      /*
+      body: Center(
+        child: _widgetOptions.elementAt(_selectedIndex),
+      ),
+*/
       body: Center(
         child: IndexedStack(
           index: _selectedIndex,
@@ -99,19 +107,27 @@ class _MainScreenState extends State<MainScreen> {
 
           items: <BottomNavigationBarItem>[
             BottomNavigationBarItem(
-              icon: SizedBox(height: 0,child: Icon(Icons.home, size: bottomBarHeight/2)),
+              icon: SizedBox(
+                  height: 0,
+                  child: Icon(Icons.home, size: bottomBarHeight / 2)),
               label: 'Home',
             ),
             BottomNavigationBarItem(
-              icon: SizedBox(height: 0,child: Icon(Icons.map, size: bottomBarHeight/2)),
+              icon: SizedBox(
+                  height: 0, child: Icon(Icons.map, size: bottomBarHeight / 2)),
               label: 'Map',
             ),
             BottomNavigationBarItem(
-              icon: SizedBox(height: 0,child: Icon(Icons.explore_rounded, size: bottomBarHeight/2)),
+              icon: SizedBox(
+                  height: 0,
+                  child:
+                      Icon(Icons.explore_rounded, size: bottomBarHeight / 2)),
               label: 'Search',
             ),
             BottomNavigationBarItem(
-              icon: SizedBox(height: 0,child: Icon(Icons.person, size: bottomBarHeight/2)),
+              icon: SizedBox(
+                  height: 0,
+                  child: Icon(Icons.person, size: bottomBarHeight / 2)),
               label: 'Profile',
             )
           ],

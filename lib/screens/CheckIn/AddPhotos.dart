@@ -157,9 +157,8 @@ class _AddPhotosState extends State<AddPhotos> {
       profileAtSpot.set({"hasVisited": myId});
     }
 
-    checkInDoc = profileAtSpot
-        .collection("CheckIns;${widget.spotId}")
-        .doc(widget.checkInId);
+    checkInDoc =
+        profileAtSpot.collection("CheckIns;$myId").doc(widget.checkInId);
 // Mark user has visited this spot
 
     // Create a check in. The user can then update photos, title, and message should they choose, but they can also skip.

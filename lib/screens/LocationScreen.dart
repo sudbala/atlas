@@ -28,31 +28,76 @@ class _friendsPageState extends State<friendsPage>
     with AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true;
+  List fWHVS;
+  void initState() {
+    super.initState();
+    //fWHVS = widget.data["FriendsWhoHaveVisited"];
+  }
+
+// oh the inefficency... Need this data anyways to see that the list of friends who have visited can change.
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+
+    return StreamBuilder(
+        stream: FirebaseFirestore.instance
+            .collection('Users')
+            .doc(myId)
+            .collection("visibleZones")
+            .doc(widget.data["zone"])
+            .collection('Area')
+            .doc(widget.area)
+            .collection('Spots')
+            .doc("${widget.data["Northing"]};${widget.data["Easting"]}")
+            .snapshots(),
+        builder: (context, docSnapshot) {
+          if (docSnapshot.hasData) {
+            fWHVS = docSnapshot.data["FriendsWhoHaveVisited"];
+            if (fWHVS.length > 0) {
+              return innerStream(widget.data, widget.area, fWHVS);
+            } else {
+              return Text(
+                  "None of your friends have checked in here before, take them with you next time!");
+            }
+          } else {
+            return Container(child: Center(child: CircularProgressIndicator()));
+          }
+        });
+  }
+}
+
+class innerStream extends StatelessWidget {
+  Map data;
+  String area;
+  List fWHVS;
+
+  innerStream(Map data, String area, List fWHVS) {
+    this.data = data;
+    this.area = area;
+    this.fWHVS = fWHVS;
+  }
+
+  List checkIns;
 
   Stream friendCheckIns() {
-    List fWHVS = widget.data["FriendsWhoHaveVisited"];
-
     List<Stream> checkInStreams = List();
     CollectionReference allCheckIns = FirebaseFirestore.instance
         .collection('Zones')
-        .doc(widget.data["zone"])
+        .doc(data["zone"])
         .collection('Area')
-        .doc(widget.area)
+        .doc(area)
         .collection('Spots')
-        .doc("${widget.data["Northing"]};${widget.data["Easting"]}")
+        .doc("${data["Northing"]};${data["Easting"]}")
         .collection('VisitedUsers');
 
-    // lmao just throwing this boy in there to tell the stream there is some data
-    //
-    checkInStreams.add(Stream.value(1));
-
+    /// checkInStreams.add(Stream.value(1));
     if (fWHVS.length != 0) {
       for (String friend in fWHVS) {
         print(friend);
         checkInStreams.add(allCheckIns
             .doc(friend)
-            .collection(
-                "CheckIns;${widget.data["Northing"]};${widget.data["Easting"]}")
+            .collection("CheckIns;$friend")
             // Don't really need to order by timeStamp if we are sorting later i guess.
             .orderBy("TimeStamp", descending: true)
             //.limit(1) Any limiting here will limit by user. Not really what we want to be honest. We could lazily rationalize it by saying that its nice it doesn't overwhelm the spot with 1 users info
@@ -64,7 +109,7 @@ class _friendsPageState extends State<friendsPage>
     //return StreamGroup.merge(checkInStreams);
     // BUG DOES NOT WORK IF THERE ARE NO CHECK INs BY ANY FRIENDS>>>>>> AND EVEN ONCE ONE IS ADDED IT will NOT FIX
     /// HOever if app is reloaded all subsequent checkins after the first are okay.
-    /// Snapshot.hasData is returning false when there is no data and error out I think, will check for the error when I have time
+
     return StreamZip(checkInStreams);
 
     /// ALTERNATIVE WAY
@@ -79,16 +124,14 @@ class _friendsPageState extends State<friendsPage>
 
   @override
   Widget build(BuildContext context) {
-    super.build(context);
-    //HeapPriorityQueue<CheckIn> checkIns = HeapPriorityQueue<CheckIn>(
-    List checkIns;
     return StreamBuilder(
         stream: friendCheckIns(),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
+            List streams = snapshot.data.toList();
             checkIns = [];
 
-            List checkInCollections = snapshot.data.toList().sublist(1);
+            List checkInCollections = streams.sublist(0);
             if (checkInCollections.length > 0) {
               for (QuerySnapshot friendCheckIn in checkInCollections) {
                 List<DocumentSnapshot> checkInSnapShots = friendCheckIn.docs;
@@ -144,7 +187,8 @@ class _friendsPageState extends State<friendsPage>
                   "None of your friends have checked in here before, take them with you next time!");
             }
           } else if (snapshot.hasError) {
-            print("shit there was an error");
+            print(snapshot.error);
+            return Container(child: Center(child: CircularProgressIndicator()));
           } else {
             return Container(child: Center(child: CircularProgressIndicator()));
           }
@@ -198,8 +242,7 @@ class _LocationScreenState extends State<LocationScreen>
         .doc("${widget.data["Northing"]};${widget.data["Easting"]}")
         .collection('VisitedUsers')
         .doc(myId)
-        .collection(
-            'CheckIns;${widget.data["Northing"]};${widget.data["Easting"]}');
+        .collection('CheckIns;$myId');
     //Return the snapshots of the users check INs. Order by timestamp descending and limit the number of posts
     // Once the user scrolls down more we can load more posts!
     return myCheckIns

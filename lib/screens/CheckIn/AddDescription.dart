@@ -159,10 +159,14 @@ class _AddDescriptionState extends State<AddDescription> {
         .doc(widget.spotId)
         .collection("VisitedUsers")
         .doc(myId)
-        .collection("CheckIns;${widget.spotId}")
+        .collection("CheckIns;$myId")
         .doc(widget.checkInId);
 
     checkInDoc.update({"title": title, "message": description});
+
+    FirebaseFirestore.instance.collection("CheckIns").doc(myId).update({
+      "CheckIns": FieldValue.arrayUnion([widget.checkInId])
+    });
   }
 
   @override

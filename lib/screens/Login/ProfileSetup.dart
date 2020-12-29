@@ -86,6 +86,10 @@ class _ProfileSetupState extends State<ProfileSetup> {
           "https://firebasestorage.googleapis.com/v0/b/atlas-8b3b8.appspot.com/o/blankProfile.png?alt=media&token=8ffc6a2d-6e08-499a-b2cf-0f250a8b0f8f"
     });
 
+    FirebaseFirestore.instance.collection('CheckIns').doc(myId).set({
+      "CheckIns": [],
+    });
+
     super.initState();
   }
 

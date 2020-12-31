@@ -1,5 +1,8 @@
+import 'dart:typed_data';
+
 import 'package:atlas/screens/LocationScreen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:mapbox_gl/mapbox_gl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -10,19 +13,14 @@ final FirebaseAuth _auth = FirebaseAuth.instance;
 final User currentUser = _auth.currentUser;
 final String myId = currentUser.uid;
 
-// We will have an example list of spots that we will add as symbols
-// In the future I think it would be really cool if using our indexing system of spots, the map would load all spots that
-// are in the viewers map plus spots a bit outside what the viewer can see and then as the user scrolls they are loaded. This way we don't have to load all spots at once!
-final List<List> spots = [
-  [LatLng(37.928942, -122.577107), 'embassy-15'],
-  [LatLng(37.921621, -122.584711), 'waterfall-15'],
-  [LatLng(37.919886, -122.571459), 'castle-15']
-];
-
 final Map<String, String> genreToSymbol = {
-  "Viewpoint": "attraction-15",
-  "Campsite": "campsite-15",
-  "Skate Spot": "skateboard-15",
+  //"Viewpoint": "attraction-15",
+  "Campsite": "campsite-01",
+  //"Skate Spot": "skateboard-15",
+  "Hot Springs": "water-01",
+  "Swimming Hole": "water-01",
+  "Hidden Gem": "hiddengem-01",
+  //"Park": "water",
 };
 
 /// This is the map that will be shown when a user clicks on the map tab.
@@ -72,7 +70,7 @@ class _AtlasMapState extends State<AtlasMap> {
       geometry: geometry,
       iconImage: iconImage,
       // Just using this to see them better
-      iconSize: 1.5,
+      iconSize: .15,
     );
     //textOpacity: 0);
   }
@@ -113,7 +111,7 @@ class _AtlasMapState extends State<AtlasMap> {
         data["time"] = DateTime.now().toString();
         // add a symbol.
         String symbol = genreToSymbol["${data["Genre"]}"];
-        symbol ??= 'castle-15';
+        symbol ??= "water-01";
         controller.addSymbol(
             _getSymbolOptions(
               symbol,
@@ -126,10 +124,25 @@ class _AtlasMapState extends State<AtlasMap> {
     });
   }
 
+  Future<void> addImageFromAsset(String name, String assetName) async {
+    final ByteData bytes = await rootBundle.load(assetName);
+    final Uint8List list = bytes.buffer.asUint8List();
+    return controller.addImage(name, list);
+  }
+
+  void _onStyleLoaded() {
+    // addImageFromAsset("water", "images/waterfall.png");
+    // addImageFromAsset("campsite", "images/campsite.png");
+    // addImageFromAsset("hiddengem", "images/hiddengem.png");
+    // addImageFromAsset("park", "images/park.png");
+    // controller.addSymbol(SymbolOptions(
+    //  geometry: LatLng(37.905759, -122.547996), iconImage: "hiddengem"));
+  }
+
   void _onMapCreated(MapboxMapController controller) async {
     // when the map is created we can add our symbols.
     this.controller = controller;
-
+    //controller.addImage(name, bytes)
     // Add a symbol tapped callback
     controller.onSymbolTapped.add(_onSymbolTapped);
 
@@ -159,6 +172,9 @@ class _AtlasMapState extends State<AtlasMap> {
     return StreamBuilder(
         stream: zones.snapshots(),
         builder: (context, snapshot) {
+          if (widget.currentPosition == null) {
+            print("GETTING CURRENT POSITION TO BE NULL");
+          }
           if (snapshot.hasData) {
             loadZones(snapshot.data.documents.map((DocumentSnapshot document) {
               return document.id;
@@ -169,10 +185,12 @@ class _AtlasMapState extends State<AtlasMap> {
               initialCameraPosition: CameraPosition(
                   target: LatLng(widget.currentPosition.latitude,
                       widget.currentPosition.longitude),
+                  //target: LatLng(37.905759, -122.5479963),
                   zoom: 15),
               accessToken: AtlasMap.ACCESS_TOKEN,
               styleString: AtlasMap.STYLE,
               myLocationEnabled: true,
+              onStyleLoadedCallback: _onStyleLoaded,
               /*onUserLocationUpdated: (location) {
           controller.moveCamera(CameraUpdate.newLatLng(location.position));
         },*/

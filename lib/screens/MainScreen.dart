@@ -99,35 +99,43 @@ class _MainScreenState extends State<MainScreen>
         ),
       ),
       bottomNavigationBar: SizedBox(
-        height: bottomBarHeight,
+        //height: bottomBarHeight,
         child: BottomNavigationBar(
           // Must set to fixed here if you don't want icons moving. I dont think we want icons moving
           type: BottomNavigationBarType.fixed,
-          backgroundColor: Colors.black,
+          backgroundColor: Colors.white,
 
           items: <BottomNavigationBarItem>[
             BottomNavigationBarItem(
               icon: SizedBox(
-                  height: 0,
-                  child: Icon(Icons.home, size: bottomBarHeight / 2)),
+                  //height: 0,
+                  child: Icon(
+                Icons.home,
+              )),
               label: 'Home',
             ),
             BottomNavigationBarItem(
               icon: SizedBox(
-                  height: 0, child: Icon(Icons.map, size: bottomBarHeight / 2)),
+                  //height: 0,
+                  child: Icon(
+                Icons.map,
+              )),
               label: 'Map',
             ),
             BottomNavigationBarItem(
               icon: SizedBox(
-                  height: 0,
-                  child:
-                      Icon(Icons.explore_rounded, size: bottomBarHeight / 2)),
+                  //height: 0,
+                  child: Icon(
+                Icons.explore_rounded,
+              )),
               label: 'Search',
             ),
             BottomNavigationBarItem(
               icon: SizedBox(
-                  height: 0,
-                  child: Icon(Icons.person, size: bottomBarHeight / 2)),
+                  //height: 0,
+                  child: Icon(
+                Icons.person,
+              )),
               label: 'Profile',
             )
           ],

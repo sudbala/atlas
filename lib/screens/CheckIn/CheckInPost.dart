@@ -9,8 +9,9 @@ import 'package:flutter_swiper/flutter_swiper.dart';
 import 'package:flutter_page_indicator/flutter_page_indicator.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:geolocator/geolocator.dart';
-
+import 'package:atlas/globals.dart' as globals;
 import '../LocationScreen.dart';
+import './hasLikedPage.dart';
 
 final FirebaseAuth _auth = FirebaseAuth.instance;
 final User currentUser = _auth.currentUser;
@@ -32,6 +33,20 @@ class CheckInPost extends StatefulWidget {
 }
 
 class _CheckInPostState extends State<CheckInPost> {
+  void likedPress(bool liked) {
+    if (!liked) {
+      FirebaseFirestore.instance
+          .collection("Likes")
+          .doc(widget.checkIn.checkInID)
+          .update({"whoLiked.$myId": globals.userName});
+    } else {
+      FirebaseFirestore.instance
+          .collection("Likes")
+          .doc(widget.checkIn.checkInID)
+          .update({"whoLiked.$myId": FieldValue.delete()});
+    }
+  }
+
   bool isLiked = false;
 
   @override
@@ -51,7 +66,7 @@ class _CheckInPostState extends State<CheckInPost> {
                   children: [
                     CheckInHeader(
                       images: widget.checkIn.photoURLs ?? ["images/detail.png"],
-                      onLikePress: null,
+                      onLikePress: likedPress,
                       title: widget.checkIn.title,
                       onBackPressed: () {
                         Navigator.pop(context);
@@ -73,11 +88,10 @@ class _CheckInPostState extends State<CheckInPost> {
   }
 }
 
-/// Widget that holds the header media for the [CheckInPost]. Subject to change.
-class CheckInHeader extends StatelessWidget {
+class CheckInHeader extends StatefulWidget {
   final List<String> images;
   final String title;
-  final bool isLiked;
+  // bool isLiked = false;
   final Function onLikePress, onBackPressed;
 
   /// Constructor of the [CheckInHeader]
@@ -85,10 +99,16 @@ class CheckInHeader extends StatelessWidget {
       {Key key,
       @required this.images,
       @required this.title,
-      this.isLiked = false,
       @required this.onLikePress,
       @required this.onBackPressed})
       : super(key: key);
+
+  _CheckInHeaderState createState() => _CheckInHeaderState();
+}
+
+/// Widget that holds the header media for the [CheckInPost]. Subject to change.
+class _CheckInHeaderState extends State<CheckInHeader> {
+  bool isLiked = false;
 
   @override
   Widget build(BuildContext context) {
@@ -111,16 +131,16 @@ class CheckInHeader extends StatelessWidget {
                     onTap: () {
                       Navigator.of(context).push(MaterialPageRoute<void>(
                           builder: (BuildContext context) {
-                        return PhotoPage(images, title);
+                        return PhotoPage(widget.images, widget.title);
                       }));
                     },
                     child: Image.network(
-                      images[index],
+                      widget.images[index],
                       fit: BoxFit.cover,
                     ));
               },
               indicatorLayout: PageIndicatorLayout.COLOR,
-              itemCount: images.length,
+              itemCount: widget.images.length,
               pagination: SwiperPagination(
                   builder: const DotSwiperPaginationBuilder(
                       color: Colors.grey,
@@ -145,7 +165,7 @@ class CheckInHeader extends StatelessWidget {
                   color: Colors.white,
                   splashColor: Colors.green.withOpacity(0.3),
                   padding: EdgeInsets.all(10),
-                  onPressed: this.onBackPressed,
+                  onPressed: this.widget.onBackPressed,
                   child: Icon(Icons.arrow_back, size: 25),
                 )),
           ),
@@ -170,7 +190,12 @@ class CheckInHeader extends StatelessWidget {
               ),
               child: FlatButton(
                 padding: EdgeInsets.all(10),
-                onPressed: this.onLikePress,
+                onPressed: () {
+                  this.widget.onLikePress(this.isLiked);
+                  setState(() {
+                    this.isLiked = !this.isLiked;
+                  });
+                },
                 child: SvgPicture.asset(
                   "assets/heart.svg",
                   color:
@@ -302,6 +327,7 @@ class CheckInContent extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           /// The Blog post title
+
           Text(
             this.checkInTitle,
             style: TextStyle(
@@ -359,6 +385,55 @@ class CheckInContent extends StatelessWidget {
                       _onLocationPressed(context);
                     },
                   ),
+                )
+              ],
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.symmetric(vertical: 0),
+            child: Row(
+              children: [
+                Icon(Icons.favorite, size: 13, color: Colors.red),
+                SizedBox(width: 5),
+                Flexible(
+                  child: StreamBuilder(
+                      stream: FirebaseFirestore.instance
+                          .collection("Likes")
+                          .doc(checkInID)
+                          .snapshots(),
+                      builder: (context, snapshot) {
+                        String message = "";
+                        if (snapshot.hasData) {
+                          int numLikes = snapshot.data["whoLiked"].keys.length;
+                          if (numLikes != 1) {
+                            message = "${numLikes.toString()} Likes!";
+                          } else {
+                            message = "1 Like!";
+                          }
+                        }
+                        return TextButton(
+                          child: Text(
+                            message,
+                            style: TextStyle(
+                              fontSize: size.width * 0.035,
+                              color: Colors.black.withOpacity(0.5),
+                            ),
+                          ),
+                          onPressed: () {
+                            // Go to the "liked page to see a list of users who have liked this post"
+                            if (snapshot.hasData) {
+                              Navigator.of(context)
+                                  .push(MaterialPageRoute<void>(
+                                builder: (BuildContext context) {
+                                  // Send user to LocationScreen.
+                                  return HasLikedPage(
+                                      snapshot.data["whoLiked"]);
+                                },
+                              ));
+                            }
+                          },
+                        );
+                      }),
                 )
               ],
             ),

@@ -1,6 +1,7 @@
 import 'package:atlas/model/CheckIn.dart';
 import 'package:atlas/model/CheckInOrder.dart';
 import 'package:atlas/screens/CheckIn/CheckInPost.dart';
+import 'package:atlas/screens/CheckIn/feedCheckIn.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
@@ -19,16 +20,23 @@ class Feed extends StatefulWidget {
   _FeedState createState() => _FeedState();
 }
 
-class _FeedState extends State<Feed> {
+class _FeedState extends State<Feed> with WidgetsBindingObserver {
   static const TextStyle headerStyle = TextStyle(
     fontSize: 25,
   );
   int numPostLoaded;
   List finalCheckIns;
   initState() {
+    WidgetsBinding.instance.addObserver(this);
     super.initState();
     numPostLoaded = 5;
     finalCheckIns = [];
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
   }
 
   Stream friendCheckInStream(List friends) {
@@ -82,12 +90,24 @@ class _FeedState extends State<Feed> {
   }
 
   Future<void> _getData() async {
-    setState(() {});
+    setState(() {
+      numPostLoaded = 5;
+    });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      setState(() {
+        numPostLoaded = 5;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     double tHeight = MediaQuery.of(context).size.height * (1 / 19);
+
     return Scaffold(
         appBar: AppBar(
           toolbarHeight: tHeight,
@@ -151,59 +171,53 @@ class _FeedState extends State<Feed> {
                       }
                       return StreamBuilder(
                           // returns a list of streams
+
                           stream: feedStream(postToLoad),
                           builder: (context, lastSnap) {
+                            ScrollController scrollController =
+                                ScrollController();
+                            scrollController.addListener(() {
+                              if (scrollController.position.pixels ==
+                                  scrollController.position.maxScrollExtent -
+                                      100) {
+                                setState(() {
+                                  // load 5 more posts WOOOO
+                                  numPostLoaded += 5;
+                                });
+                              }
+                            });
                             if (lastSnap.hasData) {
                               finalCheckIns = [];
-                              //List<QuerySnapshot> checkInCollections = snapshot.data.toList();
-                              // for (QuerySnapshot areaCheckIns in checkInCollections) {
+
                               for (DocumentSnapshot checkIn
                                   in lastSnap.data.toList()) {
                                 //Make sure the check in has the photos uploaded before we try to access them.
-
+/*
                                 if ((List<String>.from(checkIn["PhotoUrls"]))
                                         .length !=
                                     0) {
-                                  finalCheckIns.add(CheckIn(
-                                    checkInTitle: checkIn['title'],
-                                    checkInDescription: checkIn['message'],
-                                    photoURLs:
-                                        List<String>.from(checkIn['PhotoUrls']),
-                                    checkInDate: checkIn['Date'],
-                                    checkInID: checkIn.id,
-                                    checkInProfileId: checkIn["profileId"],
-                                    checkInUserName: checkIn["UserName"],
-                                    timeStamp: checkIn["TimeStamp"],
-                                  ));
-                                }
+                                      */
+                                finalCheckIns.add(CheckIn(
+                                  checkInTitle: checkIn['title'],
+                                  checkInDescription: checkIn['message'],
+                                  photoURLs:
+                                      List<String>.from(checkIn['PhotoUrls']),
+                                  checkInDate: checkIn['Date'],
+                                  checkInID: checkIn.id,
+                                  checkInProfileId: checkIn["profileId"],
+                                  checkInUserName: checkIn["UserName"],
+                                  timeStamp: checkIn["TimeStamp"],
+                                ));
+                                // }
                               }
 
                               return RefreshIndicator(
                                   onRefresh: _getData,
                                   child: ListView.builder(
-                                    //controller: scrollController,
+                                    controller: scrollController,
                                     itemCount: finalCheckIns.length,
                                     itemBuilder: (context, index) {
-                                      return ListTile(
-                                        onTap: () {
-                                          Navigator.of(context).push(
-                                            MaterialPageRoute<void>(
-                                              builder: (BuildContext context) {
-                                                /// Return the associated checkIn
-                                                return CheckInPost(
-                                                  checkIn: finalCheckIns[index],
-                                                  userName: finalCheckIns[index]
-                                                      .checkInUserName,
-                                                );
-                                              },
-                                            ),
-                                          );
-                                        },
-                                        title: Text(
-                                          "Check In: " +
-                                              finalCheckIns[index].checkInTitle,
-                                        ),
-                                      );
+                                      return FeedCheckIn(finalCheckIns[index]);
                                     },
                                   ));
                             } else if (lastSnap.hasError) {

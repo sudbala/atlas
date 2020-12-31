@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:atlas/model/CheckIn.dart';
 import 'package:atlas/screens/CheckIn/AddPhotos.dart';
 import 'package:atlas/screens/CheckIn/CheckInPost.dart';
+import 'package:atlas/screens/CheckIn/feedCheckIn.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -31,7 +32,6 @@ class _friendsPageState extends State<friendsPage>
   List fWHVS;
   void initState() {
     super.initState();
-    //fWHVS = widget.data["FriendsWhoHaveVisited"];
   }
 
   @override
@@ -70,7 +70,7 @@ class innerStream extends StatelessWidget {
   Map data;
   String area;
   List fWHVS;
-
+  int postPerFriendToLoad = 2;
   innerStream(Map data, String area, List fWHVS) {
     this.data = data;
     this.area = area;
@@ -90,35 +90,22 @@ class innerStream extends StatelessWidget {
         .doc("${data["Northing"]};${data["Easting"]}")
         .collection('VisitedUsers');
 
-    /// checkInStreams.add(Stream.value(1));
     if (fWHVS.length != 0) {
       for (String friend in fWHVS) {
-        print(friend);
         checkInStreams.add(allCheckIns
             .doc(friend)
             .collection("CheckIns;$friend")
             // Don't really need to order by timeStamp if we are sorting later i guess.
             .orderBy("TimeStamp", descending: true)
-            //.limit(1) Any limiting here will limit by user. Not really what we want to be honest. We could lazily rationalize it by saying that its nice it doesn't overwhelm the spot with 1 users info
+            //.limit()
+            //Any limiting here will limit by user. Not really what we want to be honest. We could lazily rationalize it by saying that its nice it doesn't overwhelm the spot with 1 users info
             // Maybe its better to see 1 users most recent post and another friends post from a while ago. as opposed to two from the same user... idk.
+            // We could switch over to a more similar strategy of the feed but I am tooo lazy.
             .snapshots());
       }
     }
 
-    //return StreamGroup.merge(checkInStreams);
-    // BUG DOES NOT WORK IF THERE ARE NO CHECK INs BY ANY FRIENDS>>>>>> AND EVEN ONCE ONE IS ADDED IT will NOT FIX
-    /// HOever if app is reloaded all subsequent checkins after the first are okay.
-
     return StreamZip(checkInStreams);
-
-    /// ALTERNATIVE WAY
-    // Look at all collection that are CheckIns at this specific spot. Not finding any success. Queries not working
-    /*
-    return FirebaseFirestore.instance
-        .collectionGroup(
-            "CheckIns;${widget.data["Northing"]};${widget.data["Easting"]}")
-        .snapshots();
-        */
   }
 
   @override
@@ -130,11 +117,12 @@ class innerStream extends StatelessWidget {
             List streams = snapshot.data.toList();
             checkIns = [];
 
-            List checkInCollections = streams.sublist(0);
+            List checkInCollections = streams;
             if (checkInCollections.length > 0) {
+              // Go through each stream of a friends CheckIns
               for (QuerySnapshot friendCheckIn in checkInCollections) {
                 List<DocumentSnapshot> checkInSnapShots = friendCheckIn.docs;
-                //List<DocumentSnapshot> checkInSnapShots = snapshot.data.docs;
+                // Go through each CheckIn document of this current friend
                 for (DocumentSnapshot checkIn in checkInSnapShots) {
                   //Make sure the check in has the photos uploaded before we try to access them.
                   if ((List<String>.from(checkIn["PhotoUrls"])).length != 0) {
@@ -154,31 +142,14 @@ class innerStream extends StatelessWidget {
             }
 
             if (checkIns.length != 0) {
+              // Sort the checkIns by time
               checkIns.sort((b, a) => (a.timeStamp).compareTo(b.timeStamp));
+              // Create the list of all the checkIns
               return ListView.builder(
                 //controller: scrollController,
                 itemCount: checkIns.length,
                 itemBuilder: (context, index) {
-                  return InkWell(
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute<void>(
-                            builder: (BuildContext context) {
-                              /// Return the associated checkIn
-                              return CheckInPost(
-                                checkIn: checkIns[index],
-                                userName: checkIns[index].userName,
-                              );
-                            },
-                          ),
-                        );
-                      },
-                      child: Container(
-                        height: 300,
-                        child: Text(
-                          "Check In: ${checkIns[index].checkInTitle} \n @${checkIns[index].userName} \n Posted: ${checkIns[index].checkInDate.substring(5, 16)}",
-                        ),
-                      ));
+                  return FeedCheckIn(checkIns[index]);
                 },
               );
             } else {
@@ -227,7 +198,7 @@ class _LocationScreenState extends State<LocationScreen>
   void initState() {
     super.initState();
     tController = TabController(length: 2, vsync: this);
-    personalPostsLoaded = 5;
+    personalPostsLoaded = 3;
     friendsPostLoaded = 5;
   }
 
@@ -258,8 +229,8 @@ class _LocationScreenState extends State<LocationScreen>
       if (scrollController.position.pixels ==
           scrollController.position.maxScrollExtent) {
         setState(() {
-          // load 5 more posts WOOOO
-          personalPostsLoaded += 5;
+          // load 3 more posts WOOOO
+          personalPostsLoaded += 3;
         });
       }
     });
@@ -322,31 +293,11 @@ class _LocationScreenState extends State<LocationScreen>
                     }
                     if (checkIns.length != 0) {
                       return ListView.builder(
-                        controller: scrollController,
-                        itemCount: checkIns.length,
-                        itemBuilder: (context, index) {
-                          return InkWell(
-                              onTap: () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute<void>(
-                                    builder: (BuildContext context) {
-                                      /// Return the associated checkIn
-                                      return CheckInPost(
-                                        checkIn: checkIns[index],
-                                        userName: checkIns[index].userName,
-                                      );
-                                    },
-                                  ),
-                                );
-                              },
-                              child: Container(
-                                height: 300,
-                                child: Text(
-                                  "Check In: " + checkIns[index].checkInTitle,
-                                ),
-                              ));
-                        },
-                      );
+                          controller: scrollController,
+                          itemCount: checkIns.length,
+                          itemBuilder: (context, index) {
+                            return FeedCheckIn(checkIns[index]);
+                          });
                     } else {
                       return Text(
                           "No check ins here yet, time to go make some!");

@@ -8,6 +8,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:multi_image_picker/multi_image_picker.dart';
+import 'package:atlas/globals.dart' as globals;
 
 final FirebaseAuth _auth = FirebaseAuth.instance;
 final User currentUser = _auth.currentUser;
@@ -137,10 +138,13 @@ class _AddPhotosState extends State<AddPhotos> {
   void createCheckIn() async {
     // Reading in userName here. couldn't think of better way, it is needed for check ins when we display them in feeds and such
     // Does seem like a lot of information being read in just go get a user name
-
-    String userName =
+    /*
+    String userName = 
         (await FirebaseFirestore.instance.collection("Users").doc(myId).get())
             .data()["UserName"];
+            */
+
+    String userName = globals.userName;
 
     DocumentReference profileAtSpot = widget.zones
         .doc(widget.zone)
@@ -168,8 +172,10 @@ class _AddPhotosState extends State<AddPhotos> {
       "TimeStamp": time,
       "Date": DateTime.now().toString(),
       "message": "",
-      "title": "Check In on iphone",
-      "PhotoUrls": [],
+      "title": "Check In",
+      "PhotoUrls": [
+        "https://firebasestorage.googleapis.com/v0/b/atlas-8b3b8.appspot.com/o/checkInPhotos%2FZPyIS2ltHmgTpWbvmw20JqnwPVx1%3B2020-12-30%2013%3A50%3A47.107540.jpg?alt=media&token=b60a8471-8c48-425e-b098-c48e811e2aa2"
+      ],
       "UserName": userName,
       "profileId": myId,
     });
@@ -177,6 +183,11 @@ class _AddPhotosState extends State<AddPhotos> {
     FirebaseFirestore.instance.collection("CheckIns").doc(myId).update({
       "CheckIns": FieldValue.arrayUnion([widget.checkInId])
     });
+
+    FirebaseFirestore.instance
+        .collection("Likes")
+        .doc(widget.checkInId)
+        .set({"whoLiked": {}});
   }
 
   Widget addPhotosPage(Widget mainWidget) {

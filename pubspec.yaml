@@ -54,6 +54,7 @@ dependencies:
   photo_view: ^0.10.3
 
 
+
   
 
 
@@ -88,6 +89,8 @@ flutter:
     - images/location.png
     - images/detail.png
     - assets/heart.svg
+  
+
     
 
 

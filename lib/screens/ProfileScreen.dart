@@ -3,6 +3,7 @@ import 'dart:collection';
 import 'package:atlas/model/CheckIn.dart';
 import 'package:atlas/model/CheckInOrder.dart';
 import 'package:atlas/screens/CheckIn/CheckInPost.dart';
+import 'package:atlas/screens/CheckIn/feedCheckIn.dart';
 import 'package:atlas/screens/SettingsScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
@@ -10,6 +11,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:async/async.dart';
+import 'package:atlas/globals.dart' as globals;
 
 final FirebaseAuth _auth = FirebaseAuth.instance;
 final User currentUser = _auth.currentUser;
@@ -260,6 +262,7 @@ class _ProfileScreenState extends State<ProfileScreen>
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             String userName = snapshot.data["UserName"];
+
             String name = snapshot.data["Name"];
             String bio = snapshot.data["Bio"];
             String profileUrl = snapshot.data["profileURL"];
@@ -267,6 +270,7 @@ class _ProfileScreenState extends State<ProfileScreen>
 
             if (widget.profileID == myId) {
               relationShipToProfile = 3;
+              globals.userName = userName;
             } else {
               // Grab RelationShip to profile from firestore
               relationShipToProfile = (snapshot.data["Friends"])[myId];
@@ -413,6 +417,7 @@ class _checkInTabState extends State<checkInTab>
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    ScrollController scrollController = ScrollController();
     return StreamBuilder(
         stream: FirebaseFirestore.instance
             .collection("CheckIns")
@@ -433,7 +438,6 @@ class _checkInTabState extends State<checkInTab>
                 builder: (context, snapshot) {
                   //Set up some stuff for the check Ins tab scroller to detect when to load more posts.
 
-                  ScrollController scrollController = ScrollController();
                   scrollController.addListener(() {
                     if (scrollController.position.pixels ==
                         scrollController.position.maxScrollExtent) {
@@ -493,28 +497,42 @@ class _checkInTabState extends State<checkInTab>
 
                         */
 
+                  /*
+                  return GridView.builder(
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 3),
+                      itemCount: checkIns.length,
+                      controller: scrollController,
+                      itemBuilder: (context, index) {
+                        return InkWell(
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute<void>(
+                                  builder: (BuildContext context) {
+                                    /// Return the associated checkIn
+                                    return CheckInPost(
+                                      checkIn: checkIns[index],
+                                      userName: widget.userName,
+                                    );
+                                  },
+                                ),
+                              );
+                            },
+                            child: SizedBox(
+                                child: Image.network(
+                                    checkIns[index].photoURLs[0],
+                                    fit: BoxFit.cover)));
+                      });
+                      */
                   return ListView.builder(
-                    //controller: scrollController,
-                    itemCount: checkIns.length,
+                    controller: scrollController,
+                    itemCount: checkIns.length + 1,
                     itemBuilder: (context, index) {
-                      return ListTile(
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute<void>(
-                              builder: (BuildContext context) {
-                                /// Return the associated checkIn
-                                return CheckInPost(
-                                  checkIn: checkIns[index],
-                                  userName: widget.userName,
-                                );
-                              },
-                            ),
-                          );
-                        },
-                        title: Text(
-                          "Check In: " + checkIns[index].checkInTitle,
-                        ),
-                      );
+                      // Give us some spacing so data does not get hidden under the tab
+                      if (index == 0) {
+                        return SizedBox(height: kToolbarHeight);
+                      }
+                      return FeedCheckIn(checkIns[index - 1]);
                     },
                   );
                 });

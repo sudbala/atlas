@@ -4,10 +4,14 @@ import 'package:atlas/model/CheckIn.dart';
 import 'package:atlas/screens/CheckIn/AddPhotos.dart';
 import 'package:atlas/screens/CheckIn/CheckInPost.dart';
 import 'package:atlas/screens/CheckIn/feedCheckIn.dart';
+import 'package:atlas/screens/CustomAppBar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:async/async.dart';
+import 'package:mapbox_gl/mapbox_gl.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:utm/utm.dart';
 
 final FirebaseAuth _auth = FirebaseAuth.instance;
 final User currentUser = _auth.currentUser;
@@ -191,6 +195,8 @@ class _LocationScreenState extends State<LocationScreen>
   TabController tController;
   int personalPostsLoaded;
   int friendsPostLoaded;
+  UtmCoordinate coord;
+  String url;
 
   @override
   bool get wantKeepAlive => true;
@@ -200,6 +206,14 @@ class _LocationScreenState extends State<LocationScreen>
     tController = TabController(length: 2, vsync: this);
     personalPostsLoaded = 3;
     friendsPostLoaded = 5;
+    coord = UTM.fromUtm(
+        easting: double.parse(widget.data["Easting"]),
+        northing: double.parse(widget.data["Northing"]),
+        zoneNumber: int.parse(widget.data["zone"].substring(0, 2)),
+        zoneLetter: widget.data["zone"].substring(2));
+// Url that will be sent to google maps should the user try to get directions to a spot!
+    url =
+        'https://www.google.com/maps/dir/?api=1&destination=${coord.lat},${coord.lon}&travelmode=driving&dir_action=navigate';
   }
 
   Stream personalCheckIns() {
@@ -221,9 +235,17 @@ class _LocationScreenState extends State<LocationScreen>
         .snapshots();
   }
 
+// Method for opening up the url with directions to the location in google maps
+  _launchURL(String url) async {
+    if (await canLaunch(url)) {
+      await launch(url);
+    } else {
+      throw 'Could not launch $url';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    double tHeight = MediaQuery.of(context).size.height * (1 / 13);
     ScrollController scrollController = ScrollController();
     scrollController.addListener(() {
       if (scrollController.position.pixels ==
@@ -236,10 +258,26 @@ class _LocationScreenState extends State<LocationScreen>
     });
     List<CheckIn> checkIns;
     return Scaffold(
-        appBar: AppBar(
-          // toolbarHeight: tHeight,
-          title: Text(widget.data["Name"]),
-          actions: [
+        appBar: CustomAppBar(
+          widget.data["Name"],
+          <Widget>[
+            IconButton(
+              icon: Icon(Icons.map),
+              onPressed: () {
+                Navigator.pushReplacementNamed(context, 'mainScreen',
+                    // data to be sent to the homescreen so that it knows to go back to the map and specifically open the map
+                    arguments: {
+                      "startIndex": 1,
+                      "mapStart": LatLng(coord.lat, coord.lon)
+                    });
+              },
+            ),
+            IconButton(
+              icon: Icon(Icons.directions_car_rounded),
+              onPressed: () {
+                _launchURL(url);
+              },
+            ),
             IconButton(
               icon: Icon(Icons.rate_review_rounded),
               onPressed: () {
@@ -252,7 +290,9 @@ class _LocationScreenState extends State<LocationScreen>
               },
             )
           ],
-          bottom: TabBar(
+          context,
+          null,
+          TabBar(
             tabs: [
               Tab(
                 text: "Friends",

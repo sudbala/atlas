@@ -43,22 +43,34 @@ class _SplashScreenState extends State<SplashScreen> {
             final textTheme = Theme.of(context).textTheme;
 
             return MaterialApp(
-              // Has a duration, image, and transition types to the next screen.
+                // Has a duration, image, and transition types to the next screen.
 
-              theme: ThemeData(
-                // Playing with themedata and colors here.
-                textTheme: GoogleFonts.andikaTextTheme(textTheme),
-                primarySwatch: Colors.blue,
-                primaryColor: Colors.cyan[800],
-              ),
-              home: AnimatedSplashScreen(
-                duration: 2000,
-                splash: 'images/mountain.png',
-                nextScreen: isLoggedIn ? MainScreen() : LoginScreen(),
-                splashTransition: SplashTransition.fadeTransition,
-                pageTransitionType: PageTransitionType.bottomToTop,
-              ),
-            );
+                theme: ThemeData(
+                  // Playing with themedata and colors here.
+
+                  textTheme: GoogleFonts.andikaTextTheme(textTheme),
+                  //primarySwatch: Colors.blue,
+                  primaryColor: Color.fromRGBO(39, 124, 161, 1),
+                ),
+                initialRoute: 'splashScreen',
+                onGenerateRoute: (RouteSettings settings) {
+                  var routes = <String, WidgetBuilder>{
+                    'mainScreen': (context) => MainScreen((settings.arguments))
+                  };
+                  WidgetBuilder builder = routes[settings.name];
+                  return MaterialPageRoute(
+                      builder: (context) => builder(context));
+                },
+                routes: {
+                  //'mainScreen': (context) => MainScreen(),
+                  'splashScreen': (context) => AnimatedSplashScreen(
+                        duration: 2000,
+                        splash: 'images/mountain.png',
+                        nextScreen: isLoggedIn ? MainScreen() : LoginScreen(),
+                        splashTransition: SplashTransition.fadeTransition,
+                        pageTransitionType: PageTransitionType.bottomToTop,
+                      ),
+                });
           }),
     );
   }

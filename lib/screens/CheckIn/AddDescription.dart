@@ -1,3 +1,4 @@
+import 'package:atlas/screens/CustomAppBar.dart';
 import 'package:atlas/screens/MainScreen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -169,10 +170,9 @@ class _AddDescriptionState extends State<AddDescription> {
   Widget build(BuildContext context) {
     final widgetWidth = MediaQuery.of(context).size.width;
     return Scaffold(
-        appBar: AppBar(
-            title: Text("Title and Story"),
-            leading: Container(),
-            actions: [
+        appBar: CustomAppBar(
+            "Title and Story",
+            <Widget>[
               Container(
                   child: InkWell(
                       onTap: () {
@@ -196,7 +196,9 @@ class _AddDescriptionState extends State<AddDescription> {
                         padding: EdgeInsets.symmetric(horizontal: 20),
                         child: Text("Post"),
                       ))))
-            ]),
+            ],
+            context,
+            Container()),
         body: Center(
           child: Container(
               width: widgetWidth / 1.1,

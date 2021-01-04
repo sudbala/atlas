@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:mapbox_gl/mapbox_gl.dart';
 import 'AtlasMap.dart';
 
 final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -12,9 +13,14 @@ final User currentUser = _auth.currentUser;
 final String id = currentUser.uid;
 
 class MainScreen extends StatefulWidget {
-  /// Location Variables
-
-  /// Instance vars for the MapBox map
+  int startIndex;
+  LatLng mapStart;
+  MainScreen([arguments]) {
+    if (arguments != null) {
+      this.startIndex = arguments["startIndex"];
+      this.mapStart = arguments["mapStart"];
+    }
+  }
 
   @override
   _MainScreenState createState() => _MainScreenState();
@@ -24,11 +30,17 @@ class _MainScreenState extends State<MainScreen>
     with AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true;
-  int _selectedIndex = 0;
+  int _selectedIndex;
   List<Widget> _widgetOptions;
-  Position pos;
+  List<IconData> iconList = [
+    Icons.home,
+    Icons.map,
+    Icons.explore_rounded,
+    Icons.person,
+  ];
+  Position pos = Position(latitude: 40.014984, longitude: -105.270546);
 
-  Future<void> _getPosition() async {
+  Future<Position> _getPosition() async {
     bool serviceEnabled;
     LocationPermission permission;
     print("called");
@@ -56,19 +68,27 @@ class _MainScreenState extends State<MainScreen>
     }
 
     /// Return position if we got here past all checks and requests
-    await Geolocator.getCurrentPosition().then((value) => pos = value);
+    return Geolocator.getCurrentPosition().then((value) => pos = value);
   }
 
   @override
   void initState() {
+    _selectedIndex = (widget.startIndex == null) ? 0 : widget.startIndex;
     _widgetOptions = <Widget>[
       Feed(),
       FutureBuilder(
         future: _getPosition(),
         builder: (context, snapshot) {
-          return AtlasMap(
-            currentPosition: pos,
-          );
+          if (snapshot.hasData) {
+            return AtlasMap(
+              currentPosition: (widget.mapStart == null)
+                  ? LatLng(snapshot.data.latitude, snapshot.data.longitude)
+                  : widget.mapStart,
+            );
+          } else {
+            print(snapshot.error);
+            return Center(child: Text("Could not Find User Location"));
+          }
         },
       ),
       ExploreScreen(),
@@ -76,6 +96,8 @@ class _MainScreenState extends State<MainScreen>
     ];
     super.initState();
   }
+
+  //Route aware setup and disposal
 
   void _onItemTapped(int index) {
     setState(() {
@@ -85,70 +107,58 @@ class _MainScreenState extends State<MainScreen>
 
   @override
   Widget build(BuildContext context) {
-    final bottomBarHeight = MediaQuery.of(context).size.height / 15;
+    final bottomBarHeight = MediaQuery.of(context).size.height / 16;
+
     return Scaffold(
-      /*
+        /*
       body: Center(
         child: _widgetOptions.elementAt(_selectedIndex),
       ),
 */
-      body: Center(
-        child: IndexedStack(
-          index: _selectedIndex,
-          children: _widgetOptions,
+        body: Center(
+          child: IndexedStack(
+            index: _selectedIndex,
+            children: _widgetOptions,
+          ),
         ),
-      ),
-      bottomNavigationBar: SizedBox(
-        //height: bottomBarHeight,
-        child: BottomNavigationBar(
-          // Must set to fixed here if you don't want icons moving. I dont think we want icons moving
-          type: BottomNavigationBarType.fixed,
-          backgroundColor: Colors.white,
-
-          items: <BottomNavigationBarItem>[
-            BottomNavigationBarItem(
-              icon: SizedBox(
-                  //height: 0,
-                  child: Icon(
-                Icons.home,
-              )),
-              label: 'Home',
-            ),
-            BottomNavigationBarItem(
-              icon: SizedBox(
-                  //height: 0,
-                  child: Icon(
-                Icons.map,
-              )),
-              label: 'Map',
-            ),
-            BottomNavigationBarItem(
-              icon: SizedBox(
-                  //height: 0,
-                  child: Icon(
-                Icons.explore_rounded,
-              )),
-              label: 'Search',
-            ),
-            BottomNavigationBarItem(
-              icon: SizedBox(
-                  //height: 0,
-                  child: Icon(
-                Icons.person,
-              )),
-              label: 'Profile',
-            )
-          ],
-          currentIndex: _selectedIndex,
-          selectedItemColor: Colors.cyan[700],
-          unselectedItemColor: Colors.grey[500],
-          //unselectedItemColor: Colors.green[200],
-          showSelectedLabels: false,
-          showUnselectedLabels: false,
-          onTap: _onItemTapped,
-        ),
-      ),
-    );
+        bottomNavigationBar: Container(
+            decoration: BoxDecoration(
+                border: Border(
+                    top: BorderSide(
+                        width: 0, color: Theme.of(context).primaryColor))),
+            height: bottomBarHeight,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                for (var i = 0; i < iconList.length; i++)
+// Playing with some gradients here.Not looking to cool but idk.
+                  ShaderMask(
+                      shaderCallback: (bounds) => RadialGradient(
+                            center: Alignment.center,
+                            colors: i == _selectedIndex
+                                ? ([
+                                    Color.fromRGBO(39, 124, 161, 1),
+                                    Color.fromRGBO(39, 155, 175, 1)
+                                  ])
+                                : ([Colors.grey[700], Colors.grey[400]]),
+                            tileMode: TileMode.mirror,
+                            radius: 0.5,
+                          ).createShader(bounds),
+                      child: IconButton(
+                          onPressed: () {
+                            setState(() {
+                              _selectedIndex = i;
+                            });
+                          },
+                          icon: Icon(
+                            iconList[i],
+                            color: Colors.white,
+                          )))
+                //color: i == _selectedIndex
+                //  ? Colors.cyan[700]
+                // : Colors.grey[500]))),
+              ],
+            )));
   }
 }
 

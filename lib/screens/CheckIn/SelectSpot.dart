@@ -1,6 +1,7 @@
 import 'dart:collection';
 import 'dart:math';
 import 'package:atlas/screens/CheckIn/validateSpot.dart';
+import 'package:atlas/screens/CustomAppBar.dart';
 import 'package:atlas/screens/LocationScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
@@ -78,20 +79,12 @@ class _SelectSpotState extends State<SelectSpot> {
 
   @override
   Widget build(BuildContext context) {
-    double tHeight = MediaQuery.of(context).size.height * (1 / 19);
     return FutureBuilder(
         future: _getPosition(),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             return Scaffold(
-              appBar: AppBar(
-                toolbarHeight: tHeight,
-                title: FittedBox(
-                    fit: BoxFit.fitWidth,
-                    child: Center(
-                        child: Text("Tap on a Location!",
-                            style: GoogleFonts.ebGaramond()))),
-              ),
+              appBar: CustomAppBar("Tap On a Location!", null, context, null),
               body: MapboxMap(
                 initialCameraPosition:
                     CameraPosition(target: userStart, zoom: 15),

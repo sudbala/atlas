@@ -1,6 +1,7 @@
 import 'package:atlas/model/CheckIn.dart';
 import 'package:atlas/screens/CheckIn/photoPage.dart';
 import 'package:atlas/screens/ProfileScreen.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -33,7 +34,11 @@ class CheckInPost extends StatefulWidget {
 }
 
 class _CheckInPostState extends State<CheckInPost> {
+  bool isLiked = false;
   void likedPress(bool liked) {
+    setState(() {
+      isLiked = !isLiked;
+    });
     if (!liked) {
       FirebaseFirestore.instance
           .collection("Likes")
@@ -47,15 +52,36 @@ class _CheckInPostState extends State<CheckInPost> {
     }
   }
 
-  bool isLiked = false;
+  void initState() {
+    //isLiked = false;
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
     /// Media Query Size
     Size size = MediaQuery.of(context).size;
-    return FutureBuilder(
-        future: null,
+    return StreamBuilder(
+        stream: FirebaseFirestore.instance
+            .collection("Likes")
+            .doc(widget.checkIn.checkInID)
+            .snapshots(),
         builder: (context, snapshot) {
+          String message = "";
+          Map whoLiked = {};
+          if (snapshot.hasData) {
+            whoLiked = snapshot.data["whoLiked"];
+            int numLikes = snapshot.data["whoLiked"].keys.length;
+            if (numLikes != 1) {
+              message = "${numLikes.toString()} Likes!";
+            } else {
+              message = "1 Like!";
+            }
+            if (snapshot.data["whoLiked"][myId] != null) {
+              isLiked = true;
+            }
+          }
+
           return Scaffold(
             backgroundColor: Colors.white,
             body: Container(
@@ -71,6 +97,7 @@ class _CheckInPostState extends State<CheckInPost> {
                       onBackPressed: () {
                         Navigator.pop(context);
                       },
+                      isLiked: isLiked,
                     ),
                     CheckInContent(
                       userName: widget.userName,
@@ -78,6 +105,8 @@ class _CheckInPostState extends State<CheckInPost> {
                       description: widget.checkIn.checkInDescription,
                       checkInID: widget.checkIn.checkInID,
                       profileId: widget.checkIn.profileId,
+                      message: message,
+                      whoLiked: whoLiked,
                     ),
                   ],
                 ),
@@ -93,23 +122,23 @@ class CheckInHeader extends StatefulWidget {
   final String title;
   // bool isLiked = false;
   final Function onLikePress, onBackPressed;
+  bool isLiked;
 
   /// Constructor of the [CheckInHeader]
-  const CheckInHeader(
-      {Key key,
-      @required this.images,
-      @required this.title,
-      @required this.onLikePress,
-      @required this.onBackPressed})
-      : super(key: key);
+  CheckInHeader({
+    Key key,
+    @required this.images,
+    @required this.title,
+    @required this.onLikePress,
+    @required this.onBackPressed,
+    @required this.isLiked,
+  }) : super(key: key);
 
   _CheckInHeaderState createState() => _CheckInHeaderState();
 }
 
 /// Widget that holds the header media for the [CheckInPost]. Subject to change.
 class _CheckInHeaderState extends State<CheckInHeader> {
-  bool isLiked = false;
-
   @override
   Widget build(BuildContext context) {
     /// Media Query to fit the entire width and height of the current context
@@ -134,8 +163,8 @@ class _CheckInHeaderState extends State<CheckInHeader> {
                         return PhotoPage(widget.images, widget.title);
                       }));
                     },
-                    child: Image.network(
-                      widget.images[index],
+                    child: CachedNetworkImage(
+                      imageUrl: widget.images[index],
                       fit: BoxFit.cover,
                     ));
               },
@@ -191,15 +220,13 @@ class _CheckInHeaderState extends State<CheckInHeader> {
               child: FlatButton(
                 padding: EdgeInsets.all(10),
                 onPressed: () {
-                  this.widget.onLikePress(this.isLiked);
-                  setState(() {
-                    this.isLiked = !this.isLiked;
-                  });
+                  this.widget.onLikePress(widget.isLiked);
                 },
                 child: SvgPicture.asset(
                   "assets/heart.svg",
-                  color:
-                      this.isLiked ? Colors.red : Colors.black.withOpacity(0.5),
+                  color: widget.isLiked
+                      ? Colors.red
+                      : Colors.black.withOpacity(0.5),
                 ),
               ),
             ),
@@ -237,6 +264,9 @@ class CheckInContent extends StatelessWidget {
   String spotName, zone, area, spotID;
   String timeAgo;
 
+  String message;
+  Map whoLiked;
+
   CheckInContent({
     Key key,
     @required this.checkInID,
@@ -244,6 +274,8 @@ class CheckInContent extends StatelessWidget {
     @required this.description,
     @required this.userName,
     @required this.profileId,
+    @required this.message,
+    @required this.whoLiked,
   }) : super(key: key) {
     var splitID = checkInID.split(";");
     zone = splitID[0];
@@ -321,136 +353,112 @@ class CheckInContent extends StatelessWidget {
     /// Once again we get the size to make this more dynamic
     Size size = MediaQuery.of(context).size;
     return Container(
-      width: size.width,
-      padding: EdgeInsets.symmetric(horizontal: 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          /// The Blog post title
+        width: size.width,
+        padding: EdgeInsets.symmetric(horizontal: 20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            /// The Blog post title
 
-          Text(
-            this.checkInTitle,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: size.width * 0.06,
+            Text(
+              this.checkInTitle,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: size.width * 0.06,
+              ),
             ),
-          ),
-          Padding(
-            padding: EdgeInsets.only(top: 0),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.person,
-                  size: 13,
-                  color: Colors.blue,
-                ),
-                SizedBox(width: 5),
-                Flexible(
-                  child: TextButton(
+            Padding(
+              padding: EdgeInsets.only(top: 0),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.person,
+                    size: 13,
+                    color: Colors.blue,
+                  ),
+                  SizedBox(width: 5),
+                  Flexible(
+                    child: TextButton(
+                      child: Text(
+                        userName,
+                        style: TextStyle(
+                          fontSize: size.width * 0.035,
+                          color: Colors.black.withOpacity(0.5),
+                        ),
+                      ),
+                      onPressed: () {
+                        onUserPressed(context);
+                      },
+                    ),
+                  )
+                ],
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.symmetric(vertical: 0),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.location_on,
+                    size: 13,
+                    color: Colors.green,
+                  ),
+                  SizedBox(width: 5),
+                  Flexible(
+                    child: TextButton(
+                      child: Text(
+                        userName + " checked into " + spotName + " " + timeAgo,
+                        style: TextStyle(
+                          fontSize: size.width * 0.035,
+                          color: Colors.black.withOpacity(0.5),
+                        ),
+                      ),
+                      onPressed: () {
+                        _onLocationPressed(context);
+                      },
+                    ),
+                  )
+                ],
+              ),
+            ),
+            Padding(
+                padding: EdgeInsets.symmetric(vertical: 0),
+                child: Row(children: [
+                  Icon(Icons.favorite, size: 13, color: Colors.red),
+                  SizedBox(width: 5),
+                  Flexible(
+                      child: TextButton(
                     child: Text(
-                      userName,
+                      message,
                       style: TextStyle(
                         fontSize: size.width * 0.035,
                         color: Colors.black.withOpacity(0.5),
                       ),
                     ),
                     onPressed: () {
-                      onUserPressed(context);
+                      // Go to the "liked page to see a list of users who have liked this post"
+
+                      Navigator.of(context).push(MaterialPageRoute<void>(
+                        builder: (BuildContext context) {
+                          // Send user to LocationScreen.
+                          return HasLikedPage(whoLiked);
+                        },
+                      ));
                     },
-                  ),
-                )
-              ],
+                  ))
+                ])),
+            SizedBox(
+              height: 20,
             ),
-          ),
-          Padding(
-            padding: EdgeInsets.symmetric(vertical: 0),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.location_on,
-                  size: 13,
-                  color: Colors.green,
-                ),
-                SizedBox(width: 5),
-                Flexible(
-                  child: TextButton(
-                    child: Text(
-                      userName + " checked into " + spotName + " " + timeAgo,
-                      style: TextStyle(
-                        fontSize: size.width * 0.035,
-                        color: Colors.black.withOpacity(0.5),
-                      ),
-                    ),
-                    onPressed: () {
-                      _onLocationPressed(context);
-                    },
-                  ),
-                )
-              ],
+            Text(
+              this.description,
+              style: TextStyle(
+                fontSize: size.width * 0.04,
+                color: Colors.black.withOpacity(0.6),
+                height: 1.3,
+              ),
             ),
-          ),
-          Padding(
-            padding: EdgeInsets.symmetric(vertical: 0),
-            child: Row(
-              children: [
-                Icon(Icons.favorite, size: 13, color: Colors.red),
-                SizedBox(width: 5),
-                Flexible(
-                  child: StreamBuilder(
-                      stream: FirebaseFirestore.instance
-                          .collection("Likes")
-                          .doc(checkInID)
-                          .snapshots(),
-                      builder: (context, snapshot) {
-                        String message = "";
-                        if (snapshot.hasData) {
-                          int numLikes = snapshot.data["whoLiked"].keys.length;
-                          if (numLikes != 1) {
-                            message = "${numLikes.toString()} Likes!";
-                          } else {
-                            message = "1 Like!";
-                          }
-                        }
-                        return TextButton(
-                          child: Text(
-                            message,
-                            style: TextStyle(
-                              fontSize: size.width * 0.035,
-                              color: Colors.black.withOpacity(0.5),
-                            ),
-                          ),
-                          onPressed: () {
-                            // Go to the "liked page to see a list of users who have liked this post"
-                            if (snapshot.hasData) {
-                              Navigator.of(context)
-                                  .push(MaterialPageRoute<void>(
-                                builder: (BuildContext context) {
-                                  // Send user to LocationScreen.
-                                  return HasLikedPage(
-                                      snapshot.data["whoLiked"]);
-                                },
-                              ));
-                            }
-                          },
-                        );
-                      }),
-                )
-              ],
-            ),
-          ),
-          SizedBox(
-            height: 20,
-          ),
-          Text(
-            this.description,
-            style: TextStyle(
-              fontSize: size.width * 0.04,
-              color: Colors.black.withOpacity(0.6),
-              height: 1.3,
-            ),
-          ),
-        ],
-      ),
-    );
+          ],
+        ));
   }
 }

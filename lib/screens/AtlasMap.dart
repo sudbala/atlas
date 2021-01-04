@@ -26,7 +26,7 @@ final Map<String, String> genreToSymbol = {
 /// This is the map that will be shown when a user clicks on the map tab.
 
 class AtlasMap extends StatefulWidget {
-  Position currentPosition;
+  LatLng currentPosition;
   AtlasMap({this.currentPosition});
 
   //Instance vars for the MapBox map
@@ -69,7 +69,6 @@ class _AtlasMapState extends State<AtlasMap> {
     return SymbolOptions(
       geometry: geometry,
       iconImage: iconImage,
-      // Just using this to see them better
       iconSize: .15,
     );
     //textOpacity: 0);
@@ -183,8 +182,7 @@ class _AtlasMapState extends State<AtlasMap> {
           return Scaffold(
             body: MapboxMap(
               initialCameraPosition: CameraPosition(
-                  target: LatLng(widget.currentPosition.latitude,
-                      widget.currentPosition.longitude),
+                  target: widget.currentPosition,
                   //target: LatLng(37.905759, -122.5479963),
                   zoom: 15),
               accessToken: AtlasMap.ACCESS_TOKEN,

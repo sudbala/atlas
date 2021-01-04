@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:atlas/screens/CheckIn/AddPhotos.dart';
+import 'package:atlas/screens/CustomAppBar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -314,7 +315,9 @@ class _ValidateSpotState extends State<ValidateSpot> {
             child = Center(child: CircularProgressIndicator());
           }
 
-          return Scaffold(appBar: AppBar(), body: child);
+          return Scaffold(
+              appBar: CustomAppBar("Create a Spot!", null, context, null),
+              body: child);
         });
   }
 }

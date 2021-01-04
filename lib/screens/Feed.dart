@@ -2,6 +2,7 @@ import 'package:atlas/model/CheckIn.dart';
 import 'package:atlas/model/CheckInOrder.dart';
 import 'package:atlas/screens/CheckIn/CheckInPost.dart';
 import 'package:atlas/screens/CheckIn/feedCheckIn.dart';
+import 'package:atlas/screens/CustomAppBar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
@@ -106,30 +107,23 @@ class _FeedState extends State<Feed> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    double tHeight = MediaQuery.of(context).size.height * (1 / 19);
-
     return Scaffold(
-        appBar: AppBar(
-          toolbarHeight: tHeight,
-
-          elevation: 0.0,
-          title: Text("Atlas",
-              // Set the font of the appbar header here
-              style: GoogleFonts.ebGaramond(textStyle: headerStyle)),
-          // App bar icons
-          actions: <Widget>[
-            IconButton(
-              icon: Icon(Icons.rate_review_rounded),
-              onPressed: () {
-                // This is the very start of a check in. Lets head over into our map in which we select where we would like to make a check in
-                Navigator.of(context).push(
-                    MaterialPageRoute<void>(builder: (BuildContext context) {
-                  return SelectSpot();
-                }));
-              },
-            )
-          ],
-        ),
+        appBar: CustomAppBar(
+            "Atlas",
+            <Widget>[
+              IconButton(
+                icon: Icon(Icons.rate_review_rounded),
+                onPressed: () {
+                  // This is the very start of a check in. Lets head over into our map in which we select where we would like to make a check in
+                  Navigator.of(context).push(
+                      MaterialPageRoute<void>(builder: (BuildContext context) {
+                    return SelectSpot();
+                  }));
+                },
+              )
+            ],
+            context,
+            null),
         body:
 
             /// Oh boy 3 nested StreamBuilders

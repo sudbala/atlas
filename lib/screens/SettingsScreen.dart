@@ -1,7 +1,9 @@
+import 'package:atlas/screens/CustomAppBar.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -12,12 +14,16 @@ final User currentUser = _auth.currentUser;
 final String myId = currentUser.uid;
 
 class SettingsScreen extends StatefulWidget {
+  String currentBio;
+  SettingsScreen(this.currentBio);
+
   @override
   _SettingsScreenState createState() => _SettingsScreenState();
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
   File _image;
+  String bioEditMessage = "Edit Bio";
   final picker = ImagePicker();
 
   DocumentReference profileRef =
@@ -34,6 +40,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
       } else {
         print('No image selected.');
       }
+    });
+  }
+
+  void updateBio(String newBio) async {
+    await profileRef.update({"Bio": newBio});
+    setState(() {
+      bioEditMessage = "Successfuly Updated Bio";
     });
   }
 
@@ -71,17 +84,63 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final _bioController = TextEditingController();
+    _bioController.text = widget.currentBio;
+
     return Scaffold(
-      appBar: AppBar(title: Text('Settings Pages')),
+      appBar: CustomAppBar("Settings", null, context, null),
       // Might want to add a way to log out here.
-      body: Center(
-        child: _image == null ? Text('Select an Image.') : Image.file(_image),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: getImage,
-        tooltip: 'Pick Image',
-        child: Icon(Icons.add_a_photo),
-      ),
+      body: ListView(children: <Widget>[
+        Container(
+            height: 60,
+            child: Column(children: [
+              InkWell(
+                  onTap: getImage,
+                  child: Column(children: [
+                    Text('Change Profile Image'),
+                    Icon(Icons.add_a_photo,
+                        color: Theme.of(context).primaryColor)
+                  ])),
+              if (_image != null) Image.file(_image)
+            ])),
+        Column(children: [
+          Text(bioEditMessage),
+          Container(
+              width: MediaQuery.of(context).size.width * .9,
+              child: TextField(
+                inputFormatters: [LengthLimitingTextInputFormatter(70)],
+                controller: _bioController,
+                keyboardType: TextInputType.multiline,
+                minLines: 2,
+                maxLines: 3,
+                decoration: InputDecoration(
+                    border: new OutlineInputBorder(
+                      borderRadius: const BorderRadius.all(
+                        const Radius.circular(20.0),
+                      ),
+                    ),
+                    filled: true,
+                    fillColor: Colors.white70),
+              )),
+          FlatButton(
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(18.0),
+                side: BorderSide(color: Theme.of(context).primaryColor)),
+            color: Colors.white,
+            textColor: Colors.blue,
+            padding: EdgeInsets.all(8.0),
+            onPressed: () {
+              updateBio(_bioController.text);
+            },
+            child: Text(
+              "Save".toUpperCase(),
+              style: TextStyle(
+                fontSize: 14.0,
+              ),
+            ),
+          ),
+        ])
+      ]),
     );
   }
 }

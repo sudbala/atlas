@@ -122,14 +122,14 @@ class _ProfileScreenState extends State<ProfileScreen>
     updateUsersVisibleSpots(otherProfileId, myId, exploredPlacesOther);
   }
 
-  Widget profileButton() {
+  Widget profileButton(String bio) {
     if (relationShipToProfile == 3) {
       return IconButton(
         icon: Icon(Icons.settings),
         onPressed: () => {
           Navigator.of(context)
               .push(MaterialPageRoute<void>(builder: (BuildContext context) {
-            return SettingsScreen();
+            return SettingsScreen(bio);
           }))
         },
       );
@@ -180,6 +180,12 @@ class _ProfileScreenState extends State<ProfileScreen>
     TransformationController controller = TransformationController();
     return Stack(children: [
       //FittedBox(fit: BoxFit.fitWidth, child: Center(child: Text("$userName"))),
+      Container(
+          decoration: BoxDecoration(
+              gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomLeft,
+                  colors: <Color>[Colors.white, Colors.grey[50]]))),
       SizedBox(
         height: height - height * (2 / 5),
         width: double.infinity,
@@ -209,20 +215,11 @@ class _ProfileScreenState extends State<ProfileScreen>
                                 child: Text(name,
                                     style: GoogleFonts.ebGaramond(
                                         textStyle: TextStyle(
-                                            shadows: <Shadow>[
-                                          // Playing with some shadows to make the page less 2d, kinda looking cheesy
-                                          // If only I was good with graphic design.
-                                          Shadow(
-                                              offset: Offset(1.0, 1.0),
-                                              blurRadius: 3.0,
-                                              color: Color.fromRGBO(
-                                                  89, 85, 79, 0.8))
-                                        ],
-                                            fontSize: width * 0.07,
-                                            color: Colors.white,
+                                            fontSize: width * 0.065,
+                                            color: Colors.black87,
                                             fontWeight: FontWeight.bold)))),
                             SizedBox(
-                                child: Center(child: profileButton()),
+                                child: Center(child: profileButton(bio)),
                                 width: width * (2 / 5) - 30)
                           ]),
                           Text("@$userName",
@@ -230,25 +227,41 @@ class _ProfileScreenState extends State<ProfileScreen>
                               style: GoogleFonts.andika(
                                   textStyle: TextStyle(
                                 fontSize: width * 0.04,
-                                color: Colors.white.withOpacity(0.9),
+                                color: Colors.black.withOpacity(0.9),
                               ))),
                           SizedBox(height: 4),
                           Text(bio,
                               style: GoogleFonts.andika(
                                   textStyle: TextStyle(
                                 fontSize: width * 0.035,
-                                color: Colors.white,
+                                color: Colors.black,
                               ))),
-                          SizedBox(height: 10),
+                          SizedBox(height: 20),
                           Text("Number of Places Explored: $numExplored",
                               style: GoogleFonts.andika(
                                   textStyle: TextStyle(
                                 fontSize: width * 0.035,
-                                color: Colors.white.withOpacity(0.9),
+                                color: Colors.black,
                               )))
                         ]))),
           )),
     ]);
+  }
+
+  Widget myTab() {
+    return TabBar(
+      tabs: [
+        Tab(
+          icon: Icon(Icons.rate_review_rounded),
+        ),
+        Tab(
+          icon: Icon(Icons.favorite_border_rounded),
+        ),
+        Tab(icon: Icon(Icons.map))
+      ],
+      controller: tController,
+      //labelColor: Colors.blue,
+    );
   }
 
   @override
@@ -289,38 +302,25 @@ class _ProfileScreenState extends State<ProfileScreen>
                 return [
                   // Create a persistent header. This is where we put the actual profile stuff
                   SliverAppBar(
-                    // Whether the par becomes pinned at the top or not
-                    pinned: true,
-                    // Whether part of the appbar is always there
-                    floating: true,
-                    snap: true,
-                    expandedHeight: profileHeight,
-
-                    flexibleSpace: FlexibleSpaceBar(
-                      background: profileHeader(
-                          profileHeight,
-                          screenWidth,
-                          userName,
-                          name,
-                          profileUrl,
-                          bio,
-                          relationShipToProfile,
-                          exploredPlaces.length),
-                    ),
-                    bottom: TabBar(
-                      tabs: [
-                        Tab(
-                          icon: Icon(Icons.rate_review_rounded),
-                        ),
-                        Tab(
-                          icon: Icon(Icons.favorite_border_rounded),
-                        ),
-                        Tab(icon: Icon(Icons.map))
-                      ],
-                      controller: tController,
-                      //labelColor: Colors.blue,
-                    ),
-                  ),
+                      backgroundColor: Color.fromRGBO(39, 124, 161, 1),
+                      // Whether the par becomes pinned at the top or not
+                      pinned: true,
+                      // Whether part of the appbar is always there
+                      floating: true,
+                      snap: true,
+                      expandedHeight: profileHeight,
+                      flexibleSpace: FlexibleSpaceBar(
+                        background: profileHeader(
+                            profileHeight,
+                            screenWidth,
+                            userName,
+                            name,
+                            profileUrl,
+                            bio,
+                            relationShipToProfile,
+                            exploredPlaces.length),
+                      ),
+                      bottom: ColoredTabBar(myTab())),
                 ];
               },
               // The bulk of a users view.
@@ -490,47 +490,14 @@ class _checkInTabState extends State<checkInTab>
                     }
                   }
 
-                  // a little sorting by time never hurt anyone... right
-                  /*
-                        checkIns.sort(
-                            (b, a) => (a.timeStamp).compareTo(b.timeStamp));
-
-                        */
-
-                  /*
-                  return GridView.builder(
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 3),
-                      itemCount: checkIns.length,
-                      controller: scrollController,
-                      itemBuilder: (context, index) {
-                        return InkWell(
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute<void>(
-                                  builder: (BuildContext context) {
-                                    /// Return the associated checkIn
-                                    return CheckInPost(
-                                      checkIn: checkIns[index],
-                                      userName: widget.userName,
-                                    );
-                                  },
-                                ),
-                              );
-                            },
-                            child: SizedBox(
-                                child: Image.network(
-                                    checkIns[index].photoURLs[0],
-                                    fit: BoxFit.cover)));
-                      });
-                      */
+                  // Build the List of the check INs
                   return ListView.builder(
                     controller: scrollController,
                     itemCount: checkIns.length + 1,
                     itemBuilder: (context, index) {
                       // Give us some spacing so data does not get hidden under the tab
                       if (index == 0) {
-                        return SizedBox(height: kToolbarHeight);
+                        return SizedBox(height: kToolbarHeight - 8);
                       }
                       return FeedCheckIn(checkIns[index - 1]);
                     },
@@ -540,5 +507,28 @@ class _checkInTabState extends State<checkInTab>
             return Container(child: Center(child: CircularProgressIndicator()));
           }
         });
+  }
+}
+
+class ColoredTabBar extends Container implements PreferredSizeWidget {
+  ColoredTabBar(this.tabBar);
+
+  final TabBar tabBar;
+
+  @override
+  Size get preferredSize => tabBar.preferredSize;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+        child: tabBar,
+        decoration: BoxDecoration(
+            gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomLeft,
+                colors: <Color>[
+              Color.fromRGBO(39, 124, 161, 1),
+              Color.fromRGBO(39, 155, 175, 1),
+            ])));
   }
 }

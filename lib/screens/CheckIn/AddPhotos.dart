@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:atlas/screens/CheckIn/AddDescription.dart';
+import 'package:atlas/screens/CustomAppBar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -232,6 +233,36 @@ class _AddPhotosState extends State<AddPhotos> {
     loadAssets();
     createCheckIn();
     return Scaffold(
+        appBar: CustomAppBar(
+            "Add Photos",
+            <Widget>[
+              Container(
+                  child: InkWell(
+                      onTap: () {
+                        _savePhotos();
+                        if (_images.length != 0) {
+                          Navigator.of(context).pushReplacement(
+                              MaterialPageRoute<void>(
+                                  builder: (BuildContext context) {
+                            return AddDescription(widget.creationId,
+                                widget.fullId, widget.checkInId);
+                          }));
+                        }
+                      },
+                      child: Center(
+                          child: Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 20),
+                        child: Text("Next"),
+                      ))))
+            ],
+            context,
+            IconButton(
+                onPressed: () {
+                  loadAssets();
+                },
+                icon: Icon(Icons.add_a_photo_rounded))),
+
+        /*
         appBar: AppBar(
           title: Text("Add Photos"),
           leading: IconButton(
@@ -260,6 +291,8 @@ class _AddPhotosState extends State<AddPhotos> {
                     ))))
           ],
         ),
+        */
+
         body: addPhotosPage(mainWidget));
     //body: Center(child: mainWidget));
   }

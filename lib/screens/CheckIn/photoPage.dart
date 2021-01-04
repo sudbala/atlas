@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
 
@@ -27,7 +28,8 @@ class PhotoPage extends StatelessWidget {
                           onInteractionEnd: (ScaleEndDetails endDetails) {
                             controller.value = Matrix4.identity();
                           },
-                          child: Image.network(photoUrls[index]))));
+                          child:
+                              CachedNetworkImage(imageUrl: photoUrls[index]))));
             }));
   }
 }

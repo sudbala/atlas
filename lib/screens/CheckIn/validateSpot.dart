@@ -5,7 +5,7 @@ import 'package:atlas/screens/CustomAppBar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+
 import 'package:searchable_dropdown/searchable_dropdown.dart';
 import 'package:utm/utm.dart';
 
@@ -47,16 +47,21 @@ class _ValidateSpotState extends State<ValidateSpot> {
   // Possible selection values for the spot genre / type menu selection.
 
   List<String> possibleSpotTypes = [
-    "Swimming Hole",
-    "Hot Springs",
     "Viewpoint",
-    "Skate Spot",
-    "Surf Break",
-    "Campsite",
-    "Wild Camp",
+    "Camping",
+    "Hot Springs",
+    "Swimming Hole",
     "Hidden Gem",
-    "Park",
+    "Rock Climbing",
+    "Ski Area",
+    "Hiking Trails",
+    "Summit",
+    "Surf Spot",
+    "Sunset View",
+    "Biking Trails",
+    "Picnic Spot",
   ];
+
   List<DropdownMenuItem> items = [];
 
   @override

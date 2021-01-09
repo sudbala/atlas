@@ -1,8 +1,8 @@
 import 'package:atlas/screens/CustomAppBar.dart';
-import 'package:atlas/screens/MainScreen.dart';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -10,6 +10,7 @@ final FirebaseAuth _auth = FirebaseAuth.instance;
 final User currentUser = _auth.currentUser;
 final String myId = currentUser.uid;
 
+// ignore: must_be_immutable
 class AddDescription extends StatefulWidget {
   String creationId;
   String fullId;
@@ -90,6 +91,7 @@ class _AddDescriptionState extends State<AddDescription> {
       }
       return Future.value(true);
     } else {
+      // ignore: non_constant_identifier_names
       List FWHVlist; // FriendsWhoHaveVisited list
       // if the user didn't already have this spot in their visible spots then set it
       if (userId == myId) {
@@ -188,8 +190,14 @@ class _AddDescriptionState extends State<AddDescription> {
                         saveText(
                             _titleController.text, _descriptionController.text);
                         // no more new screen.
-                        Navigator.of(context)
-                            .popUntil((route) => route.isFirst);
+
+                        /// Bug, will keep putting user here
+                        // Need to fix this route.isFirst will be profileSetup when user just created place.
+                        Navigator.pushReplacementNamed(context, 'mainScreen',
+                            // data to be sent to the homescreen so that it knows to go back to the map and specifically open the map
+                            arguments: {
+                              "startIndex": 1,
+                            });
                       },
                       child: Center(
                           child: Padding(

@@ -1,11 +1,10 @@
-import 'dart:collection';
 import 'dart:math';
 import 'package:atlas/screens/CheckIn/validateSpot.dart';
 import 'package:atlas/screens/CustomAppBar.dart';
-import 'package:atlas/screens/LocationScreen.dart';
+
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:google_fonts/google_fonts.dart';
+
 import 'package:mapbox_gl/mapbox_gl.dart';
 import 'package:utm/utm.dart';
 

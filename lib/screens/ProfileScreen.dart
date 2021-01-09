@@ -1,12 +1,10 @@
-import 'dart:collection';
-
 import 'package:atlas/model/CheckIn.dart';
 import 'package:atlas/model/CheckInOrder.dart';
-import 'package:atlas/screens/CheckIn/CheckInPost.dart';
+
 import 'package:atlas/screens/CheckIn/feedCheckIn.dart';
 import 'package:atlas/screens/SettingsScreen.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
+
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -155,14 +153,38 @@ class _ProfileScreenState extends State<ProfileScreen>
           onPressed: () => {
                 if (relationShipToProfile == 1)
                   {
+                    // This means we just became friends. So we have to update each other's visibleSpot collection such that user1 has all of user2 explore spots. and vice versa.
                     setProfiles(2, 2),
-                    becomeFriends(widget.profileID, exploredPlaces)
-                  }
-                // This means we just became friends. So we have to update each other's visibleSpot collection such that user1 has all of user2 explore spots. and vice versa.
+                    becomeFriends(widget.profileID, exploredPlaces),
+                    // Just realized you can't really unfriend someone....
+                    // Kinda a pain in the ass considering you would have to see every place this user as explored and remove it from your friends who have visited
 
+                    // Not impossible, just would take a lot of time.
+
+                    // Send notification to other user that yall are now friends!
+
+                    FirebaseFirestore.instance
+                        .collection("Notifications")
+                        .doc(widget.profileID)
+                        .update({
+                      "Notifications": FieldValue.arrayUnion([
+                        "$myId ;${globals.userName} accepted your friend request!!"
+                      ])
+                    })
+                  }
                 else if (relationShipToProfile == 0)
                   // Set other profile to 4 so I see requested. Set my profile to 1 so they see Accept Friend
-                  {setProfiles(4, 1)}
+                  {
+                    setProfiles(4, 1),
+                    FirebaseFirestore.instance
+                        .collection("Notifications")
+                        .doc(widget.profileID)
+                        .update({
+                      "Notifications": FieldValue.arrayUnion([
+                        "$myId ;${globals.userName} requested you as a friend!!"
+                      ])
+                    })
+                  }
               },
           child: Text(buttonText, textScaleFactor: scale));
     }
@@ -326,7 +348,11 @@ class _ProfileScreenState extends State<ProfileScreen>
               // The bulk of a users view.
               body: TabBarView(
                 children: [
-                  checkInTab(widget.profileID, userName, exploredPlaces),
+                  (relationShipToProfile == 2 || relationShipToProfile == 3)
+                      ? checkInTab(widget.profileID, userName, exploredPlaces)
+                      : Center(
+                          child: Text(
+                              "You Must be friends to view eachother's posts")),
                   Text("Put a list of all favorite places"),
                   Text("Put a user's heatmap here"),
                 ],

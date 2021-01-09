@@ -3,7 +3,6 @@ import 'package:atlas/screens/Feed.dart';
 import 'package:atlas/screens/ProfileScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:mapbox_gl/mapbox_gl.dart';
 import 'AtlasMap.dart';
@@ -99,12 +98,6 @@ class _MainScreenState extends State<MainScreen>
 
   //Route aware setup and disposal
 
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     final bottomBarHeight = MediaQuery.of(context).size.height / 16;
@@ -122,10 +115,6 @@ class _MainScreenState extends State<MainScreen>
           ),
         ),
         bottomNavigationBar: Container(
-            decoration: BoxDecoration(
-                border: Border(
-                    top: BorderSide(
-                        width: 0, color: Theme.of(context).primaryColor))),
             height: bottomBarHeight,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,

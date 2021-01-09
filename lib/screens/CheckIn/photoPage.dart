@@ -1,6 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:photo_view/photo_view.dart';
 
 // A simply page to see one's images in all their glory. Similar to what strava does. Implement imageViewers so one can zoom in on each image.
 class PhotoPage extends StatelessWidget {

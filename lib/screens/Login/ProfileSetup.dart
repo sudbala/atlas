@@ -1,6 +1,5 @@
 // THis page will be to setup a user's profile the first time they log into the app;
 import 'package:atlas/screens/Login/ProfileSetupWidgets.dart';
-import 'package:atlas/screens/MainScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_swiper/flutter_swiper.dart';
 import 'package:flutter_page_indicator/flutter_page_indicator.dart';
@@ -81,6 +80,7 @@ class _ProfileSetupState extends State<ProfileSetup> {
     // Create the user with an empty array of ExploredSpots and empty map of Friends and an initial photo in case the user never sets one or is not updated in time.
     FirebaseFirestore.instance.collection('Users').doc(myId).set({
       "ExploredSpots": [],
+      // Hard Coded to have a friend request from jamesFleming
       "Friends": {},
       "profileURL":
           "https://firebasestorage.googleapis.com/v0/b/atlas-8b3b8.appspot.com/o/blankProfile.png?alt=media&token=8ffc6a2d-6e08-499a-b2cf-0f250a8b0f8f"
@@ -88,6 +88,12 @@ class _ProfileSetupState extends State<ProfileSetup> {
 
     FirebaseFirestore.instance.collection('CheckIns').doc(myId).set({
       "CheckIns": [],
+    });
+
+    FirebaseFirestore.instance.collection("Notifications").doc(myId).set({
+      "Notifications": [
+        "ZPyIS2ltHmgTpWbvmw20JqnwPVx1; Go add James as a friend!"
+      ]
     });
 
     super.initState();

@@ -6,12 +6,28 @@ class SignIn extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 320.0,
+      width: 270.0,
       height: 60.0,
       alignment: FractionalOffset.center,
       decoration: BoxDecoration(
-        color: Colors.teal,
-        borderRadius: BorderRadius.all(Radius.circular(30.0)),
+        gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomLeft,
+            colors: <Color>[
+              Color.fromRGBO(39, 124, 161, 0.7),
+              Color.fromRGBO(39, 155, 175, 0.9),
+            ]),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.5),
+            blurRadius: 2,
+            offset: Offset(2, 2),
+            spreadRadius: 2.0,
+          ),
+        ],
+
+        //color: Theme.of(context).primaryColor.withOpacity(0.7),
+        borderRadius: BorderRadius.all(Radius.circular(20.0)),
       ),
       child: Text(
         "Sign in with Google",

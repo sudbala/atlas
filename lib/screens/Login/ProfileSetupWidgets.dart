@@ -6,9 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_form_bloc/flutter_form_bloc.dart';
 import 'package:flutter_swiper/flutter_swiper.dart';
 import 'package:flutter/services.dart';
-import 'dart:io';
-import 'package:image_picker/image_picker.dart';
-import 'package:path/path.dart';
+
+import 'package:multi_image_picker/multi_image_picker.dart';
 
 final FirebaseAuth _auth = FirebaseAuth.instance;
 final User currentUser = _auth.currentUser;
@@ -254,7 +253,7 @@ class InputNameField extends StatelessWidget {
                         ),
                       ),
                       filled: true,
-                      prefixIcon: Icon(Icons.person),
+                      prefixIcon: Icon(Icons.message),
                       hintStyle: new TextStyle(color: Colors.grey[800]),
                       hintText: "I like to swim!",
                       fillColor: Colors.white70),
@@ -295,40 +294,28 @@ class UploadProfilePicture extends StatefulWidget {
 }
 
 class _UploadProfilePictureState extends State<UploadProfilePicture> {
-  File _profileImage;
-  final picker = ImagePicker();
+  Asset _profileImage;
+  List<Asset> _images = [];
 
-  /// We want to be able to get an image from the camera
-  Future _imgFromCamera() async {
-    final image = await picker.getImage(source: ImageSource.camera);
-
-    /// Once we get the image, we set the state so that the _profileImage is
-    /// update with the image.
-    setState(() {
-      if (image != null) {
-        _profileImage = File(image.path);
-        widget.photoSelected = true;
-      } else {
-        /// If we don't select a photo, then make sure we set the bool to false
-        widget.photoSelected = false;
-      }
-    });
-  }
+  List<Asset> resultList;
 
   /// If we want to get an image from the gallery
   Future _imgFromGallery() async {
-    final image = await picker.getImage(source: ImageSource.gallery);
+    try {
+      resultList = await MultiImagePicker.pickImages(
+          maxImages: 1, selectedAssets: _images);
+    } on Exception catch (e) {
+      print(e.toString());
+    }
+    if (!mounted) return;
+
+    setState(() {
+      _images = resultList;
+      _profileImage = _images[0];
+      widget.photoSelected = true;
+    });
 
     /// Now once we get the image, we once again set the image and bool
-    setState(() {
-      if (image != null) {
-        _profileImage = File(image.path);
-        widget.photoSelected = true;
-      } else {
-        /// If we don't select a photo, then make sure we set the bool to false
-        widget.photoSelected = false;
-      }
-    });
   }
 
   /// We make the option chooser widget to give the user a choice in gallery
@@ -353,6 +340,7 @@ class _UploadProfilePictureState extends State<UploadProfilePicture> {
                       Navigator.of(context).pop();
                     },
                   ),
+                  /*
                   ListTile(
                     leading: Icon(Icons.photo_camera),
                     title: Text('Take a Photo'),
@@ -361,6 +349,7 @@ class _UploadProfilePictureState extends State<UploadProfilePicture> {
                       Navigator.of(context).pop();
                     },
                   ),
+                  */
                 ],
               ),
             ),
@@ -368,44 +357,44 @@ class _UploadProfilePictureState extends State<UploadProfilePicture> {
         });
   }
 
-  /// Method to save a photo to the Firebase Storage
-  Future<String> uploadFile() async {
-    String returnURL;
-    Reference storageReference =
-        FirebaseStorage.instance.ref().child('profilePhotos/$myId');
-
-    /// Get the storage reference of where the image will go, then use an
-    /// upload task to put upload it there. Upon completion, we get URL
-    UploadTask uploadTask = storageReference.putFile(_profileImage);
-    await uploadTask.whenComplete(() async {
-      print('File Uploaded');
-      await storageReference.getDownloadURL().then((value) {
-        returnURL = value;
-      });
-    });
-
-    return returnURL;
-  }
-
-  Future _savePhoto() async {
+  Future _savePhotos() async {
     /// Need to save a blank profile if we don't have a profile image
     /// First, let's decide what our url will be. If not a blank, we need to
     /// upload to firebase storage and grab that url. Otherwise, hardcoded blank
     /// url.
-    String pfpURL =
-        'https://firebasestorage.googleapis.com/v0/b/atlas-8b3b8.appspot.com/o/blankProfile.png?alt=media&token=8ffc6a2d-6e08-499a-b2cf-0f250a8b0f8f';
+    ///
+    List<String> photoUrls = new List<String>();
+// can't use for each here... learned this the hard way.
 
-    /// Place we will store the url
-    DocumentReference currentUserReference =
-        FirebaseFirestore.instance.collection('Users').doc(myId);
+    for (var image in _images) {
+      // Trying a data upload method. hopefully this works better cause of course the other ways we have uploaded images don't work on my iphone for some reason
 
-    /// Upload time, grab the new URL if profileImage is not null
-    if (_profileImage != null) {
-      pfpURL = await uploadFile();
+      // Convert the asset into a file
+      ByteData byteData = await image.getByteData();
+      List<int> imageData = byteData.buffer.asUint8List();
+
+      Reference ref =
+          FirebaseStorage.instance.ref().child('profilePhotos/$myId.png');
+
+      UploadTask uploadTask = ref.putData(imageData);
+
+      await uploadTask.whenComplete(() async {
+        photoUrls.add(await ref.getDownloadURL());
+      });
     }
 
     /// Now we just update our storage in [Firestore]
-    currentUserReference.update({'profileURL': pfpURL});
+    ///
+    DocumentReference currentUserReference =
+        FirebaseFirestore.instance.collection('Users').doc(myId);
+    if (photoUrls[0] != null) {
+      await currentUserReference.update({'profileURL': photoUrls[0]});
+    } else {
+      await currentUserReference.update({
+        'profileURL':
+            'https://firebasestorage.googleapis.com/v0/b/atlas-8b3b8.appspot.com/o/blankProfile.png?alt=media&token=8ffc6a2d-6e08-499a-b2cf-0f250a8b0f8f'
+      });
+    }
   }
 
   @override
@@ -441,11 +430,11 @@ class _UploadProfilePictureState extends State<UploadProfilePicture> {
                       child: _profileImage != null
                           ? ClipRRect(
                               borderRadius: BorderRadius.circular(80),
-                              child: Image.file(
-                                _profileImage,
+                              child: AssetThumb(
+                                asset: _profileImage,
                                 width: 150,
                                 height: 150,
-                                fit: BoxFit.cover,
+                                //fit: BoxFit.cover,
                               ),
                             )
 
@@ -475,7 +464,7 @@ class _UploadProfilePictureState extends State<UploadProfilePicture> {
                 textColor: Colors.blue,
                 padding: EdgeInsets.all(8.0),
                 onPressed: () {
-                  _savePhoto();
+                  _savePhotos();
                   Navigator.of(context)
                       .push(MaterialPageRoute<void>(builder: (context) {
                     return MainScreen();
@@ -493,7 +482,7 @@ class _UploadProfilePictureState extends State<UploadProfilePicture> {
               ),
               TextButton(
                 onPressed: () {
-                  _savePhoto();
+                  _savePhotos();
                   Navigator.of(context).pushReplacement(
                       MaterialPageRoute<void>(builder: (context) {
                     return MainScreen();

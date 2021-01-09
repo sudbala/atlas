@@ -1,4 +1,6 @@
 import 'package:atlas/model/CheckIn.dart';
+import 'package:atlas/screens/CheckIn/CheckInComments.dart';
+import 'package:atlas/screens/CheckIn/CheckInSettings.dart';
 import 'package:atlas/screens/CheckIn/photoPage.dart';
 import 'package:atlas/screens/ProfileScreen.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -9,7 +11,6 @@ import 'package:flutter_svg/svg.dart';
 import 'package:flutter_swiper/flutter_swiper.dart';
 import 'package:flutter_page_indicator/flutter_page_indicator.dart';
 import 'package:timeago/timeago.dart' as timeago;
-import 'package:geolocator/geolocator.dart';
 import 'package:atlas/globals.dart' as globals;
 import '../LocationScreen.dart';
 import './hasLikedPage.dart';
@@ -40,6 +41,22 @@ class _CheckInPostState extends State<CheckInPost> {
       isLiked = !isLiked;
     });
     if (!liked) {
+      // Our notification system is super simple. Just adds a notification to the users list
+      // This allows spamming, a user can dislike and then just keep liking to spam someone's notifications...
+      // Not a huge problem
+
+      // User will still get noitification even if you dislike the post. but like why are you disliking a  post , kinda shady
+      if (myId != widget.checkIn.checkInProfileId) {
+        FirebaseFirestore.instance
+            .collection("Notifications")
+            .doc(widget.checkIn.checkInProfileId)
+            .update({
+          "Notifications": FieldValue.arrayUnion([
+            "$myId ;${globals.userName} liked ${widget.checkIn.checkInTitle}!  ;${widget.checkIn.checkInID}"
+          ])
+        });
+      }
+
       FirebaseFirestore.instance
           .collection("Likes")
           .doc(widget.checkIn.checkInID)
@@ -93,6 +110,7 @@ class _CheckInPostState extends State<CheckInPost> {
                     CheckInHeader(
                       images: widget.checkIn.photoURLs ?? ["images/detail.png"],
                       onLikePress: likedPress,
+                      checkIn: widget.checkIn,
                       title: widget.checkIn.title,
                       onBackPressed: () {
                         Navigator.pop(context);
@@ -123,6 +141,7 @@ class CheckInHeader extends StatefulWidget {
   // bool isLiked = false;
   final Function onLikePress, onBackPressed;
   bool isLiked;
+  CheckIn checkIn;
 
   /// Constructor of the [CheckInHeader]
   CheckInHeader({
@@ -130,6 +149,7 @@ class CheckInHeader extends StatefulWidget {
     @required this.images,
     @required this.title,
     @required this.onLikePress,
+    @required this.checkIn,
     @required this.onBackPressed,
     @required this.isLiked,
   }) : super(key: key);
@@ -180,8 +200,8 @@ class _CheckInHeaderState extends State<CheckInHeader> {
             ),
           ),
           Positioned(
-            top: 25,
-            left: 3,
+            top: 40,
+            left: 5,
             child: Container(
                 width: 50,
                 height: 50,
@@ -198,6 +218,33 @@ class _CheckInHeaderState extends State<CheckInHeader> {
                   child: Icon(Icons.arrow_back, size: 25),
                 )),
           ),
+          if (myId == widget.checkIn.checkInProfileId)
+            Positioned(
+              top: 40,
+              right: 5,
+              child: Container(
+                  width: 50,
+                  height: 50,
+                  clipBehavior: Clip.antiAlias,
+                  decoration: BoxDecoration(
+                    color: Colors.transparent,
+                    shape: BoxShape.circle,
+                  ),
+                  child: FlatButton(
+                    color: Colors.white,
+                    splashColor: Colors.green.withOpacity(0.3),
+                    padding: EdgeInsets.all(10),
+                    onPressed: () {
+                      Navigator.of(context)
+                          .push(MaterialPageRoute(builder: (context) {
+                        return CheckInSettings(
+                          checkIn: widget.checkIn,
+                        );
+                      }));
+                    },
+                    child: Icon(Icons.settings, size: 25),
+                  )),
+            ),
           Positioned(
             bottom: 12,
             right: 25,
@@ -367,94 +414,119 @@ class CheckInContent extends StatelessWidget {
                 fontSize: size.width * 0.06,
               ),
             ),
-            Padding(
-              padding: EdgeInsets.only(top: 0),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.person,
-                    size: 13,
-                    color: Colors.blue,
-                  ),
-                  SizedBox(width: 5),
-                  Flexible(
-                    child: TextButton(
-                      child: Text(
-                        userName,
-                        style: TextStyle(
-                          fontSize: size.width * 0.035,
-                          color: Colors.black.withOpacity(0.5),
-                        ),
-                      ),
-                      onPressed: () {
-                        onUserPressed(context);
-                      },
-                    ),
-                  )
-                ],
-              ),
-            ),
-            Padding(
-              padding: EdgeInsets.symmetric(vertical: 0),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.location_on,
-                    size: 13,
-                    color: Colors.green,
-                  ),
-                  SizedBox(width: 5),
-                  Flexible(
-                    child: TextButton(
-                      child: Text(
-                        userName + " checked into " + spotName + " " + timeAgo,
-                        style: TextStyle(
-                          fontSize: size.width * 0.035,
-                          color: Colors.black.withOpacity(0.5),
-                        ),
-                      ),
-                      onPressed: () {
-                        _onLocationPressed(context);
-                      },
-                    ),
-                  )
-                ],
-              ),
-            ),
-            Padding(
-                padding: EdgeInsets.symmetric(vertical: 0),
-                child: Row(children: [
-                  Icon(Icons.favorite, size: 13, color: Colors.red),
-                  SizedBox(width: 5),
-                  Flexible(
-                      child: TextButton(
+            // User Name and Profile Link
+            Row(
+              children: [
+                Icon(
+                  Icons.person,
+                  size: 13,
+                  color: Colors.blue,
+                ),
+                SizedBox(width: 5),
+                Flexible(
+                  child: TextButton(
                     child: Text(
-                      message,
+                      userName,
                       style: TextStyle(
                         fontSize: size.width * 0.035,
                         color: Colors.black.withOpacity(0.5),
                       ),
                     ),
                     onPressed: () {
-                      // Go to the "liked page to see a list of users who have liked this post"
-
-                      Navigator.of(context).push(MaterialPageRoute<void>(
-                        builder: (BuildContext context) {
-                          // Send user to LocationScreen.
-                          return HasLikedPage(whoLiked);
-                        },
-                      ));
+                      onUserPressed(context);
                     },
-                  ))
-                ])),
+                  ),
+                ),
+                SizedBox(width: 5),
+              ],
+            ),
+
+// Spot location, post time ago and location link
+            Row(
+              children: [
+                Icon(
+                  Icons.location_on,
+                  size: 13,
+                  color: Colors.green,
+                ),
+                Flexible(
+                  child: TextButton(
+                    child: Text(
+                      spotName + " " + timeAgo,
+                      style: TextStyle(
+                        fontSize: size.width * 0.035,
+                        color: Colors.black.withOpacity(0.5),
+                      ),
+                    ),
+                    onPressed: () {
+                      _onLocationPressed(context);
+                    },
+                  ),
+                )
+              ],
+            ),
+// Likes and like page link
+            Row(children: [
+              Icon(Icons.favorite, size: 13, color: Colors.red),
+              SizedBox(width: 3),
+              Flexible(
+                  child: TextButton(
+                child: Text(
+                  message,
+                  style: TextStyle(
+                    fontSize: size.width * 0.035,
+                    color: Colors.black.withOpacity(0.5),
+                  ),
+                ),
+                onPressed: () {
+                  // Go to the "liked page to see a list of users who have liked this post"
+
+                  Navigator.of(context).push(MaterialPageRoute<void>(
+                    builder: (BuildContext context) {
+                      // Send user to LocationScreen.
+                      return HasLikedPage(whoLiked);
+                    },
+                  ));
+                },
+              )),
+              SizedBox(width: 5),
+              //Comments and comment page link
+              Icon(Icons.comment_rounded, size: 13, color: Colors.black),
+              SizedBox(width: 1),
+              Flexible(
+                  child: TextButton(
+                child: Text(
+                  "Comments",
+                  style: TextStyle(
+                    fontSize: size.width * 0.035,
+                    color: Colors.black.withOpacity(0.5),
+                  ),
+                ),
+                onPressed: () {
+                  // Go to the "liked page to see a list of users who have liked this post"
+
+                  Navigator.of(context).push(MaterialPageRoute<void>(
+                    builder: (BuildContext context) {
+                      // Send user to LocationScreen.
+                      return CheckInComments(
+                        checkInId: checkInID,
+                        myId: myId,
+                        checkInProfileId: profileId,
+                        checkInTitle: checkInTitle,
+                      );
+                    },
+                  ));
+                },
+              ))
+            ]),
             SizedBox(
-              height: 20,
+              height: 10,
             ),
             Text(
               this.description,
               style: TextStyle(
                 fontSize: size.width * 0.04,
-                color: Colors.black.withOpacity(0.6),
+                color: Colors.black.withOpacity(0.7),
                 height: 1.3,
               ),
             ),

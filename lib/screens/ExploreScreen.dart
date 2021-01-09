@@ -2,7 +2,6 @@ import 'package:atlas/screens/CustomAppBar.dart';
 import 'package:flutter/material.dart';
 import 'package:atlas/screens/ProfileScreen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class ExploreScreen extends StatefulWidget {
   // Define just a super basic example list that will be searched on because it is passed into SearcH method
@@ -28,9 +27,6 @@ class ExploreScreen extends StatefulWidget {
 class _ExploreScreenState extends State<ExploreScreen> {
   @override
   Widget build(BuildContext context) {
-    const TextStyle headerStyle = TextStyle(
-      fontSize: 25,
-    );
     // Here we build the explore page.
     return Scaffold(
       appBar: CustomAppBar(
@@ -55,7 +51,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                 })
           ],
           context,
-          null),
+          Container()),
       body: Text(
           "We can put anything here. Suggested places, friends, most visited place in area by friends that you have not visited etcc"),
     );

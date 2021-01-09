@@ -36,11 +36,7 @@ dependencies:
   cloud_firestore: ^0.14.4
   firebase_storage: ^5.1.0
   google_fonts: ^1.1.1
-  image_picker:
-    git:
-      url: https://github.com/cpboyd/plugins.git
-      ref: image_picker_workaround
-      path: packages/image_picker/image_picker
+
   
   shared_preferences: ^0.5.12+4
   flutter_swiper: ^1.1.6

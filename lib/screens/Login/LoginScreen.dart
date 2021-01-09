@@ -2,6 +2,7 @@ import 'package:atlas/screens/Login/styles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'SignInButton.dart';
 import 'StaggerAnimation.dart';
 import 'GoogleSignIn.dart';
@@ -78,7 +79,7 @@ class LoginScreenState extends State<LoginScreen>
   @override
   Widget build(BuildContext context) {
     /// Time dilation slows down the animation for development purposes
-    timeDilation = 0.4;
+    // timeDilation = 0.4;
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.dark);
     return WillPopScope(
       onWillPop: _onWillPop,
@@ -88,6 +89,8 @@ class LoginScreenState extends State<LoginScreen>
             image: backgroundImage,
           ),
           child: Container(
+              // Turning off the gradient for now.
+              /*
               decoration: BoxDecoration(
                   gradient: LinearGradient(
                 colors: <Color>[
@@ -98,37 +101,53 @@ class LoginScreenState extends State<LoginScreen>
                 begin: const FractionalOffset(0.0, 0.0),
                 end: const FractionalOffset(0.0, 1.0),
               )),
+              */
               child: new ListView(
-                padding: const EdgeInsets.all(0.0),
+            padding: const EdgeInsets.all(0.0),
+            children: <Widget>[
+              new Stack(
+                alignment: AlignmentDirectional.bottomCenter,
                 children: <Widget>[
-                  new Stack(
-                    alignment: AlignmentDirectional.bottomCenter,
-                    children: <Widget>[
-                      animationStatus == 0
-                          ? new Padding(
-                              padding: const EdgeInsets.only(top: 500.0),
-                              child: new InkWell(
-                                  onTap: () {
-                                    setState(() {
-                                      animationStatus = 1;
-                                    });
-                                    signInWithGoogle().then((value) => {
-                                          if (value != null)
-                                            {
-                                              _playAnimation(),
-                                              // Should be true if you want to auto sign in. Turn off for testing onboarding
-                                              _storeLoggedInStatus(true)
-                                            }
-                                        });
-                                  },
-                                  child: SignIn()),
-                            )
-                          : new StaggerAnimation(
-                              buttonController: _loginButtonController.view),
-                    ],
+                  Positioned(
+                    top: 400,
+                    child: Text("Atlas",
+                        style: GoogleFonts.ebGaramond(
+                            textStyle:
+                                TextStyle(fontSize: 50, color: Colors.white,
+                                    // Making Text pop off page a little bit
+                                    shadows: <Shadow>[
+                              Shadow(
+                                offset: Offset(2.0, 2.0),
+                                blurRadius: 3.0,
+                                color: Color.fromARGB(200, 0, 0, 0),
+                              )
+                            ]))),
                   ),
+                  animationStatus == 0
+                      ? new Padding(
+                          padding: const EdgeInsets.only(top: 500.0),
+                          child: new InkWell(
+                              onTap: () {
+                                setState(() {
+                                  animationStatus = 1;
+                                });
+                                signInWithGoogle().then((value) => {
+                                      if (value != null)
+                                        {
+                                          _playAnimation(),
+                                          // Should be true if you want to auto sign in. Turn off for testing onboarding
+                                          _storeLoggedInStatus(true)
+                                        }
+                                    });
+                              },
+                              child: SignIn()),
+                        )
+                      : new StaggerAnimation(
+                          buttonController: _loginButtonController.view),
                 ],
-              )),
+              ),
+            ],
+          )),
         ),
       ),
     );

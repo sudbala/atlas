@@ -1,7 +1,6 @@
 import 'package:animated_splash_screen/animated_splash_screen.dart';
 import 'package:atlas/screens/Login/LoginScreen.dart';
-import 'package:atlas/screens/Login/ProfileSetup.dart';
-import 'package:atlas/screens/Login/ProfileSetupWidgets.dart';
+
 import 'package:page_transition/page_transition.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -17,11 +16,6 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen> {
   MainScreen mainScreen;
   var isLoggedIn = false;
-
-  Future<void> _setMap() async {
-    mainScreen = MainScreen();
-    print("HELLO");
-  }
 
   Future<void> _loggedIn() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();

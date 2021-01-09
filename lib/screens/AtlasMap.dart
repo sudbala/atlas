@@ -3,7 +3,7 @@ import 'dart:typed_data';
 import 'package:atlas/screens/LocationScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:geolocator/geolocator.dart';
+
 import 'package:mapbox_gl/mapbox_gl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -14,17 +14,27 @@ final User currentUser = _auth.currentUser;
 final String myId = currentUser.uid;
 
 final Map<String, String> genreToSymbol = {
-  //"Viewpoint": "attraction-15",
-  "Campsite": "campsite-01",
+  "Viewpoint": "view_point_icon-01",
+  "Camping": "camp_icon_01",
   //"Skate Spot": "skateboard-15",
-  "Hot Springs": "water-01",
-  "Swimming Hole": "water-01",
-  "Hidden Gem": "hiddengem-01",
+  "Hot Springs": "water_spot-01",
+  "Swimming Hole": "water_spot-01",
+  "Hidden Gem": "hiddeng_gem-01",
+  "Rock Climbing": "rock_climbing-01",
+  "Ski Area": "skiing_icon-01",
+  "Hiking Trails": "hiking_spot-01",
+  "Summit": "summit_icon-01",
+  "Surf Spot": "surfSpot-01",
+  "Sunset View": "sunset-01",
+  "Biking Trails": 'mountain_biking-01',
+  "Picnic Spot": 'picnic_icon_01',
+
   //"Park": "water",
 };
 
 /// This is the map that will be shown when a user clicks on the map tab.
 
+// ignore: must_be_immutable
 class AtlasMap extends StatefulWidget {
   LatLng currentPosition;
   AtlasMap({this.currentPosition});
@@ -69,7 +79,7 @@ class _AtlasMapState extends State<AtlasMap> {
     return SymbolOptions(
       geometry: geometry,
       iconImage: iconImage,
-      iconSize: .15,
+      iconSize: .2,
     );
     //textOpacity: 0);
   }
@@ -110,7 +120,7 @@ class _AtlasMapState extends State<AtlasMap> {
         data["time"] = DateTime.now().toString();
         // add a symbol.
         String symbol = genreToSymbol["${data["Genre"]}"];
-        symbol ??= "water-01";
+        symbol ??= "hiddeng_gem-01";
         controller.addSymbol(
             _getSymbolOptions(
               symbol,

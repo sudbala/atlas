@@ -8,21 +8,31 @@ class CustomAppBar extends AppBar {
   Widget myLeading;
   PreferredSizeWidget myBottom;
   Widget flexible;
+  bool centertitle;
   CustomAppBar(
-      String titleText, List actions, BuildContext context, Widget leading,
-      [PreferredSizeWidget bottom, Widget flexible]) {
+    String titleText,
+    List actions,
+    BuildContext context,
+    Widget leading, [
+    PreferredSizeWidget bottom,
+    Widget flexible,
+    bool centerTitle = true,
+  ]) {
     this.titleText = titleText;
     this.actions = actions;
     this.context = context;
     this.myLeading = leading;
     this.myBottom = bottom;
     this.flexible = flexible;
+    this.centertitle = centerTitle;
   }
 
   static const TextStyle headerStyle = TextStyle(
     fontSize: 25,
   );
-
+  @override
+  // TODO: implement centerTitle
+  bool get centerTitle => centertitle;
   @override
   // TODO: implement flexibleSpace
   Widget get flexibleSpace => Container(

@@ -1,12 +1,11 @@
 import 'package:atlas/model/CheckIn.dart';
 import 'package:atlas/model/CheckInOrder.dart';
-import 'package:atlas/screens/CheckIn/CheckInPost.dart';
 import 'package:atlas/screens/CheckIn/feedCheckIn.dart';
 import 'package:atlas/screens/CustomAppBar.dart';
+import 'package:atlas/screens/Notifications.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:google_fonts/google_fonts.dart';
+
 import 'package:atlas/screens/CheckIn/SelectSpot.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:async/async.dart';
@@ -22,9 +21,6 @@ class Feed extends StatefulWidget {
 }
 
 class _FeedState extends State<Feed> with WidgetsBindingObserver {
-  static const TextStyle headerStyle = TextStyle(
-    fontSize: 25,
-  );
   int numPostLoaded;
   List finalCheckIns;
   initState() {
@@ -112,6 +108,15 @@ class _FeedState extends State<Feed> with WidgetsBindingObserver {
             "Atlas",
             <Widget>[
               IconButton(
+                icon: Icon(Icons.notifications_rounded),
+                onPressed: () {
+                  Navigator.of(context).push(
+                      MaterialPageRoute<void>(builder: (BuildContext context) {
+                    return Notifications();
+                  }));
+                },
+              ),
+              IconButton(
                 icon: Icon(Icons.rate_review_rounded),
                 onPressed: () {
                   // This is the very start of a check in. Lets head over into our map in which we select where we would like to make a check in
@@ -123,7 +128,7 @@ class _FeedState extends State<Feed> with WidgetsBindingObserver {
               )
             ],
             context,
-            null),
+            Container()),
         body:
 
             /// Oh boy 3 nested StreamBuilders
@@ -136,7 +141,13 @@ class _FeedState extends State<Feed> with WidgetsBindingObserver {
           builder: (context, docSnapshot) {
             if (docSnapshot.hasData) {
               // Once we have data make a list of all the friends userIds
-              List friends = docSnapshot.data["Friends"].keys.toList();
+              List friends = [];
+              // Make sure they are actually friends and not just requested.
+              for (String friend in docSnapshot.data["Friends"].keys) {
+                if (docSnapshot.data["Friends"][friend] == 2) {
+                  friends.add(friend);
+                }
+              }
               // We can add our own id so our own posts show up here
               friends.add(myId);
 
@@ -171,7 +182,7 @@ class _FeedState extends State<Feed> with WidgetsBindingObserver {
                             ScrollController scrollController =
                                 ScrollController();
                             scrollController.addListener(() {
-                              if (scrollController.position.pixels ==
+                              if (scrollController.position.pixels >=
                                   scrollController.position.maxScrollExtent -
                                       100) {
                                 setState(() {

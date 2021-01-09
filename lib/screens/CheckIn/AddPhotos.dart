@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:atlas/screens/CheckIn/AddDescription.dart';
 import 'package:atlas/screens/CustomAppBar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -15,6 +13,7 @@ final FirebaseAuth _auth = FirebaseAuth.instance;
 final User currentUser = _auth.currentUser;
 final String myId = currentUser.uid;
 
+// ignore: must_be_immutable
 class AddPhotos extends StatefulWidget {
   CollectionReference zones = FirebaseFirestore.instance.collection("Zones");
   // Creation Id tells us whether this spot is discovered, explored, or returned to for later reference
@@ -63,7 +62,7 @@ class AddPhotos extends StatefulWidget {
 
 class _AddPhotosState extends State<AddPhotos> {
   List<Asset> _images = [];
-  List files = [];
+
   List<Asset> resultList;
   double widgetHeight;
   DocumentReference checkInDoc;
@@ -91,6 +90,7 @@ class _AddPhotosState extends State<AddPhotos> {
     ///
     List<String> photoUrls = new List<String>();
 // can't use for each here... learned this the hard way.
+    int i = 0;
     for (var image in _images) {
       // Trying a data upload method. hopefully this works better cause of course the other ways we have uploaded images don't work on my iphone for some reason
 
@@ -100,7 +100,8 @@ class _AddPhotosState extends State<AddPhotos> {
 
       Reference ref = FirebaseStorage.instance
           .ref()
-          .child('checkInPhotos/$myId;${DateTime.now().toString()}.jpg');
+          .child('checkInPhotos/${widget.checkInId};$i.jpg');
+      i++;
 
       UploadTask uploadTask = ref.putData(imageData);
 
@@ -175,7 +176,7 @@ class _AddPhotosState extends State<AddPhotos> {
       "message": "",
       "title": "Check In",
       "PhotoUrls": [
-        "https://firebasestorage.googleapis.com/v0/b/atlas-8b3b8.appspot.com/o/checkInPhotos%2FZPyIS2ltHmgTpWbvmw20JqnwPVx1%3B2020-12-30%2013%3A50%3A47.107540.jpg?alt=media&token=b60a8471-8c48-425e-b098-c48e811e2aa2"
+        "https://firebasestorage.googleapis.com/v0/b/atlas-8b3b8.appspot.com/o/blankProfile.png?alt=media&token=8ffc6a2d-6e08-499a-b2cf-0f250a8b0f8f"
       ],
       "UserName": userName,
       "profileId": myId,
@@ -188,7 +189,7 @@ class _AddPhotosState extends State<AddPhotos> {
     FirebaseFirestore.instance
         .collection("Likes")
         .doc(widget.checkInId)
-        .set({"whoLiked": {}});
+        .set({"whoLiked": {}, "comments": []});
   }
 
   Widget addPhotosPage(Widget mainWidget) {

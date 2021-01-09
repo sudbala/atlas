@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:atlas/model/CheckIn.dart';
 import 'package:atlas/screens/CheckIn/AddPhotos.dart';
-import 'package:atlas/screens/CheckIn/CheckInPost.dart';
 import 'package:atlas/screens/CheckIn/feedCheckIn.dart';
 import 'package:atlas/screens/CustomAppBar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -302,6 +301,8 @@ class _LocationScreenState extends State<LocationScreen>
             controller: tController,
             //labelColor: Colors.blue,
           ),
+          null,
+          false,
         ),
         body: TabBarView(
           controller: tController,

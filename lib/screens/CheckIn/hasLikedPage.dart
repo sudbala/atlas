@@ -1,5 +1,6 @@
+import 'package:atlas/screens/CustomAppBar.dart';
 import 'package:atlas/screens/ProfileScreen.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'package:flutter/material.dart';
 
 class HasLikedPage extends StatelessWidget {
@@ -11,7 +12,7 @@ class HasLikedPage extends StatelessWidget {
   Widget build(BuildContext context) {
     List keys = data.keys.toList();
     return Scaffold(
-        appBar: AppBar(title: Text("Likes")),
+        appBar: CustomAppBar("Likes", null, context, null),
         body: ListView.builder(
           itemCount: keys.length,
           itemBuilder: (context, index) {
